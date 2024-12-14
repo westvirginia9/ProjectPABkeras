@@ -9,6 +9,7 @@ import android.widget.DatePicker
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
@@ -27,7 +28,11 @@ class HomePageActivity : AppCompatActivity() {
     private lateinit var tvDate: TextView
     private lateinit var ivLeft: ImageView
     private lateinit var ivRight: ImageView
+    private lateinit var tvPemasukanNominal: TextView
+    private lateinit var tvPengeluaranNominal: TextView
+    private lateinit var tvSisaUangNominal: TextView
     private var currentCalendar: Calendar = Calendar.getInstance()
+    private lateinit var pieChart: PieChart
 
     private lateinit var auth: FirebaseAuth
     private val firestore = FirebaseFirestore.getInstance()
@@ -37,6 +42,12 @@ class HomePageActivity : AppCompatActivity() {
         setContentView(R.layout.activity_home_page)
 
         auth = FirebaseAuth.getInstance()
+
+        // Inisialisasi UI
+        tvPemasukanNominal = findViewById(R.id.tv_pemasukan_nominal)
+        tvPengeluaranNominal = findViewById(R.id.tv_pengeluaran_nominal)
+        tvSisaUangNominal = findViewById(R.id.tv_sisa_uang_nominal)
+        pieChart = findViewById(R.id.pieChart)
 
         // Ambil userId dari pengguna yang sedang login
         val userId = auth.currentUser?.uid
@@ -60,9 +71,12 @@ class HomePageActivity : AppCompatActivity() {
             welcomeTextView.text = "Hai Pengguna!"
         }
 
+        loadTransactionSummary()
+
         // Inisialisasi PieChart
         val pieChart: PieChart = findViewById(R.id.pieChart)
         setupPieChart(pieChart)
+        loadPieChartData(pieChart)
 
         // Tombol Floating Action Button (FAB)
         val fabButton: ImageButton = findViewById(R.id.btn_fab)
@@ -190,6 +204,65 @@ class HomePageActivity : AppCompatActivity() {
         pieChart.animateY(1000)
     }
 
+    private fun loadTransactionSummary() {
+        val userId = auth.currentUser?.uid ?: return
+
+        firestore.collection("transactions")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+
+                val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
+                val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+                val remainingMoney = totalIncome - totalExpense
+
+                tvPemasukanNominal.text = "Rp ${totalIncome.toInt()}"
+                tvPengeluaranNominal.text = "Rp ${totalExpense.toInt()}"
+                tvSisaUangNominal.text = "Rp ${remainingMoney.toInt()}"
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun loadPieChartData(pieChart: PieChart) {
+        val userId = auth.currentUser?.uid ?: return
+
+        firestore.collection("transactions")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("type", "expense")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val categoryTotals = snapshot.documents.groupBy { it.getString("category") }
+                    .mapValues { entry ->
+                        entry.value.sumOf { it.getDouble("amount") ?: 0.0 }
+                    }
+
+                val entries = categoryTotals.map { (category, total) ->
+                    PieEntry(total.toFloat(), category)
+                }
+
+                val dataSet = PieDataSet(entries, "").apply {
+                    colors = ColorTemplate.MATERIAL_COLORS.toList()
+                    sliceSpace = 3f
+                    selectionShift = 5f
+                }
+
+                val data = PieData(dataSet).apply {
+                    setValueFormatter(PercentFormatter(pieChart))
+                    setValueTextSize(12f)
+                    setValueTextColor(Color.WHITE)
+                }
+
+                pieChart.data = data
+                pieChart.invalidate() // Refresh Pie Chart
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun moveToPreviousMonth() {
         currentCalendar.add(Calendar.MONTH, -1) // Pindah ke bulan sebelumnya
         updateDateDisplay()
@@ -225,3 +298,5 @@ class HomePageActivity : AppCompatActivity() {
         datePickerDialog.show()
     }
 }
+
+

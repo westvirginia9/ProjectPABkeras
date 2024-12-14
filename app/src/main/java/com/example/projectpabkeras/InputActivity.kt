@@ -1,174 +1,121 @@
 package com.example.projectpabkeras
 
 import android.app.DatePickerDialog
-import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
 import java.util.*
 
 class InputActivity : AppCompatActivity() {
 
-    // Variabel untuk tombol tab
-    private lateinit var btnPengeluaran: Button
-    private lateinit var btnPemasukan: Button
-    private lateinit var btnBack: ImageView
-
-    // Variabel untuk pengeluaran
-    private lateinit var spinnerKategori: Spinner
-    private lateinit var tanggalPengeluaranEditText: EditText
-    private lateinit var keteranganPengeluaranEditText: EditText
-    private lateinit var jumlahPengeluaranEditText: EditText
-
-    // Variabel untuk pemasukan
-    private lateinit var tanggalPemasukanEditText: EditText
-    private lateinit var keteranganPemasukanEditText: EditText
-    private lateinit var jumlahPemasukanEditText: EditText
-
-    // Tombol simpan
-    private lateinit var btnSimpanPengeluaran: Button
-    private lateinit var btnSimpanPemasukan: Button
-
-    private var isPengeluaran = true // Default: Tab Pengeluaran aktif
+    private lateinit var auth: FirebaseAuth
+    private lateinit var firestore: FirebaseFirestore
+    private val calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_input)
 
-        // Inisialisasi komponen
-        btnPengeluaran = findViewById(R.id.btn_pengeluaran)
-        btnPemasukan = findViewById(R.id.btn_pemasukan)
+        auth = FirebaseAuth.getInstance()
+        firestore = FirebaseFirestore.getInstance()
 
-        // Pengeluaran
-        spinnerKategori = findViewById(R.id.spinner_kategori)
-        tanggalPengeluaranEditText = findViewById(R.id.et_tanggal_pengeluaran)
-        keteranganPengeluaranEditText = findViewById(R.id.et_keterangan_pengeluaran)
-        jumlahPengeluaranEditText = findViewById(R.id.et_jumlah_pengeluaran)
-        btnSimpanPengeluaran = findViewById(R.id.btn_simpan_pengeluaran)
+        val btnPengeluaran = findViewById<Button>(R.id.btn_pengeluaran)
+        val btnPemasukan = findViewById<Button>(R.id.btn_pemasukan)
+        val layoutPengeluaran = findViewById<LinearLayout>(R.id.layout_pengeluaran)
+        val layoutPemasukan = findViewById<LinearLayout>(R.id.layout_pemasukan)
 
-        // Pemasukan
-        tanggalPemasukanEditText = findViewById(R.id.et_tanggal_pemasukan)
-        keteranganPemasukanEditText = findViewById(R.id.et_keterangan_pemasukan)
-        jumlahPemasukanEditText = findViewById(R.id.et_jumlah_pemasukan)
-        btnSimpanPemasukan = findViewById(R.id.btn_simpan_pemasukan)
-
-        btnBack = findViewById(R.id.btn_back)
-        btnBack.setOnClickListener {
-            onBackPressed()  // Fungsi untuk kembali ke halaman sebelumnya
-        }
-        // Tombol Goals
-        val goalsButton: ImageView = findViewById(R.id.goals_bottom)
-        goalsButton.setOnClickListener {
-            val intent = Intent(this, GoalsActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Tombol Achievement
-        val achievementButton: ImageView = findViewById(R.id.icAchievement)
-        achievementButton.setOnClickListener {
-            val intent = Intent(this, AchievementActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Tombol Achievement
-        val homeButton: ImageView = findViewById(R.id.ic_home)
-        homeButton.setOnClickListener {
-            val intent = Intent(this, HomePageActivity::class.java)
-            startActivity(intent)
-        }
-        val icRiwayat: ImageView = findViewById(R.id.ic_history)
-        icRiwayat.setOnClickListener {
-            val intent = Intent(this, RiwayatActivity::class.java)
-            startActivity(intent)
-        }
-        val profileButton: ImageView = findViewById(R.id.ic_profile)
-        profileButton.setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
-        }
-
-
-        // Setup Spinner Kategori untuk pengeluaran
-        val kategoriList = listOf("Kebutuhan Pokok", "Entertainment", "Tabungan", "Sosial")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, kategoriList)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerKategori.adapter = adapter
-
-        // Setup tombol tab
+        // Ganti tampilan berdasarkan tombol yang dipilih
         btnPengeluaran.setOnClickListener {
-            isPengeluaran = true
-            updateFormUI()
+            layoutPengeluaran.visibility = LinearLayout.VISIBLE
+            layoutPemasukan.visibility = LinearLayout.GONE
         }
-
         btnPemasukan.setOnClickListener {
-            isPengeluaran = false
-            updateFormUI()
+            layoutPengeluaran.visibility = LinearLayout.GONE
+            layoutPemasukan.visibility = LinearLayout.VISIBLE
         }
 
-        // Date picker untuk pengeluaran
-        tanggalPengeluaranEditText.setOnClickListener { showDatePickerDialog(tanggalPengeluaranEditText) }
+        // Inisialisasi Spinner Kategori dengan data statis
+        val categories = listOf("Kebutuhan Pokok", "Hiburan", "Tabungan", "Sosial")
+        val spinner = findViewById<Spinner>(R.id.spinner_kategori)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinner.adapter = adapter
 
-        // Date picker untuk pemasukan
-        tanggalPemasukanEditText.setOnClickListener { showDatePickerDialog(tanggalPemasukanEditText) }
+        // Setup DatePicker
+        val etTanggalPengeluaran = findViewById<EditText>(R.id.et_tanggal_pengeluaran)
+        val etTanggalPemasukan = findViewById<EditText>(R.id.et_tanggal_pemasukan)
 
-        // Simpan data pengeluaran
-        btnSimpanPengeluaran.setOnClickListener {
-            val tanggal = tanggalPengeluaranEditText.text.toString()
-            val keterangan = keteranganPengeluaranEditText.text.toString()
-            val jumlah = jumlahPengeluaranEditText.text.toString().toDoubleOrNull()
-            val kategori = spinnerKategori.selectedItem.toString()
+        etTanggalPengeluaran.setOnClickListener { showDatePicker(etTanggalPengeluaran) }
+        etTanggalPemasukan.setOnClickListener { showDatePicker(etTanggalPemasukan) }
 
-            if (tanggal.isEmpty() || keterangan.isEmpty() || jumlah == null) {
-                Toast.makeText(this, "Lengkapi data pengeluaran!", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
+        // Tombol Simpan
+        val btnSimpanPengeluaran = findViewById<Button>(R.id.btn_simpan_pengeluaran)
+        val btnSimpanPemasukan = findViewById<Button>(R.id.btn_simpan_pemasukan)
 
-            Toast.makeText(this, "Pengeluaran disimpan: $jumlah - $kategori", Toast.LENGTH_SHORT).show()
-        }
-
-        // Simpan data pemasukan
-        btnSimpanPemasukan.setOnClickListener {
-            val tanggal = tanggalPemasukanEditText.text.toString()
-            val keterangan = keteranganPemasukanEditText.text.toString()
-            val jumlah = jumlahPemasukanEditText.text.toString().toDoubleOrNull()
-
-            if (tanggal.isEmpty() || keterangan.isEmpty() || jumlah == null) {
-                Toast.makeText(this, "Lengkapi data pemasukan!", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            Toast.makeText(this, "Pemasukan disimpan: $jumlah", Toast.LENGTH_SHORT).show()
-        }
+        btnSimpanPengeluaran.setOnClickListener { saveTransaction("expense") }
+        btnSimpanPemasukan.setOnClickListener { saveTransaction("income") }
     }
 
-    private fun updateFormUI() {
-        if (isPengeluaran) {
-            btnPengeluaran.setBackgroundColor(getColor(R.color.selected_tab))
-            btnPemasukan.setBackgroundColor(getColor(R.color.unselected_tab))
-
-            findViewById<View>(R.id.layout_pengeluaran).visibility = View.VISIBLE
-            findViewById<View>(R.id.layout_pemasukan).visibility = View.GONE
-        } else {
-            btnPengeluaran.setBackgroundColor(getColor(R.color.unselected_tab))
-            btnPemasukan.setBackgroundColor(getColor(R.color.selected_tab))
-
-            findViewById<View>(R.id.layout_pengeluaran).visibility = View.GONE
-            findViewById<View>(R.id.layout_pemasukan).visibility = View.VISIBLE
-        }
-    }
-
-    private fun showDatePickerDialog(editText: EditText) {
-        val calendar = Calendar.getInstance()
-        val datePickerDialog = DatePickerDialog(
-            this,
-            { _, year, month, dayOfMonth ->
-                editText.setText("$dayOfMonth/${month + 1}/$year")
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
+    private fun showDatePicker(editText: EditText) {
+        val datePickerDialog = DatePickerDialog(this, { _, year, month, dayOfMonth ->
+            calendar.set(year, month, dayOfMonth)
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            editText.setText(sdf.format(calendar.time))
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
         datePickerDialog.show()
+    }
+
+    private fun saveTransaction(type: String) {
+        val userId = auth.currentUser?.uid ?: return
+
+        val category = if (type == "expense") {
+            findViewById<Spinner>(R.id.spinner_kategori).selectedItem.toString()
+        } else {
+            "Income" // Default kategori untuk pemasukan
+        }
+
+        val amount = if (type == "expense") {
+            findViewById<EditText>(R.id.et_jumlah_pengeluaran).text.toString().toDoubleOrNull()
+        } else {
+            findViewById<EditText>(R.id.et_jumlah_pemasukan).text.toString().toDoubleOrNull()
+        }
+
+        val date = if (type == "expense") {
+            findViewById<EditText>(R.id.et_tanggal_pengeluaran).text.toString()
+        } else {
+            findViewById<EditText>(R.id.et_tanggal_pemasukan).text.toString()
+        }
+
+        val description = if (type == "expense") {
+            findViewById<EditText>(R.id.et_keterangan_pengeluaran).text.toString()
+        } else {
+            findViewById<EditText>(R.id.et_keterangan_pemasukan).text.toString()
+        }
+
+        if (amount == null || date.isEmpty()) {
+            Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val transaction = mapOf(
+            "userId" to userId,
+            "type" to type,
+            "category" to category,
+            "amount" to amount,
+            "description" to description,
+            "date" to date
+        )
+
+        firestore.collection("transactions").add(transaction)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Transaksi berhasil disimpan", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menyimpan transaksi: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
