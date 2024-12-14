@@ -2,6 +2,9 @@ package com.example.projectpabkeras
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -13,8 +16,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 data class Transaction(
-    val date: String = "",
-    val type: String = "",
+    val date: String = "", // Format tanggal: "yyyy-MM-dd"
+    val type: String = "", // "income" atau "expense"
     val category: String = "",
     val amount: Double = 0.0,
     val description: String = ""
@@ -57,9 +60,6 @@ class RiwayatActivity : AppCompatActivity() {
         // Tombol navigasi
         setupNavigation()
 
-        // Update tampilan tanggal awal
-        updateDateDisplay()
-
         // Fetch data awal (Harian)
         setTabSelected(tabHarian, tabMingguan, tabBulanan)
         fetchTransactions("harian")
@@ -82,38 +82,28 @@ class RiwayatActivity : AppCompatActivity() {
     }
 
     private fun setupNavigation() {
-        // Tombol Kembali
         val btnBack = findViewById<ImageView>(R.id.btn_back)
         btnBack.setOnClickListener { onBackPressed() }
 
-        // Tombol Home
         val homeButton: ImageView = findViewById(R.id.ic_home)
         homeButton.setOnClickListener {
             startActivity(Intent(this, HomePageActivity::class.java))
         }
 
-        // Tombol Goals
         val goalsButton: ImageView = findViewById(R.id.goals_bottom)
         goalsButton.setOnClickListener {
             startActivity(Intent(this, GoalsActivity::class.java))
         }
 
-        // Tombol Achievement
         val achievementButton: ImageView = findViewById(R.id.icAchievement)
         achievementButton.setOnClickListener {
             startActivity(Intent(this, AchievementActivity::class.java))
         }
 
-        // Tombol Profil
         val profileButton: ImageView = findViewById(R.id.ic_profile)
         profileButton.setOnClickListener {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
-    }
-
-    private fun updateDateDisplay() {
-        val monthFormat = SimpleDateFormat("MMM - yyyy", Locale.getDefault())
-        tvDate.text = monthFormat.format(currentCalendar.time)
     }
 
     private fun fetchTransactions(viewType: String) {
@@ -149,31 +139,50 @@ class RiwayatActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerViewHarian() {
-        val adapter = TransactionAdapter(transactions) // Seluruh transaksi
+        val adapter = SummaryAdapter(transactions, "harian")
         recyclerView.adapter = adapter
     }
 
     private fun setupRecyclerViewMingguan() {
-        // Filter data mingguan (contoh implementasi)
-        val filteredTransactions = transactions.filter {
-            val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(it.date)
-            val calendar = Calendar.getInstance().apply { time = transactionDate }
-            val currentWeek = currentCalendar.get(Calendar.WEEK_OF_YEAR)
-            calendar.get(Calendar.WEEK_OF_YEAR) == currentWeek
-        }
-        val adapter = TransactionAdapter(filteredTransactions)
+        val calendar = Calendar.getInstance()
+        val today = calendar.time
+        calendar.add(Calendar.DAY_OF_YEAR, -6)
+        val startOfWeek = calendar.time
+
+        val dateFormatter = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
+        tvDate.text = "${dateFormatter.format(startOfWeek)} s/d ${dateFormatter.format(today)}"
+
+        val totalIncome = transactions.filter { isInCurrentWeek(it.date) && it.type == "income" }.sumOf { it.amount }
+        val totalExpense = transactions.filter { isInCurrentWeek(it.date) && it.type == "expense" }.sumOf { it.amount }
+
+        val summaryTransactions = listOf(
+            Transaction(
+                date = "${dateFormatter.format(startOfWeek)} s/d ${dateFormatter.format(today)}",
+                type = "summary",
+                amount = totalIncome - totalExpense
+            )
+        )
+
+        val adapter = SummaryAdapter(summaryTransactions, "mingguan")
         recyclerView.adapter = adapter
     }
 
     private fun setupRecyclerViewBulanan() {
-        // Filter data bulanan
-        val filteredTransactions = transactions.filter {
-            val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(it.date)
-            val calendar = Calendar.getInstance().apply { time = transactionDate }
-            val currentMonth = currentCalendar.get(Calendar.MONTH)
-            calendar.get(Calendar.MONTH) == currentMonth
-        }
-        val adapter = TransactionAdapter(filteredTransactions)
+        val dateFormatter = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
+        tvDate.text = dateFormatter.format(currentCalendar.time)
+
+        val totalIncome = transactions.filter { isInCurrentMonth(it.date) && it.type == "income" }.sumOf { it.amount }
+        val totalExpense = transactions.filter { isInCurrentMonth(it.date) && it.type == "expense" }.sumOf { it.amount }
+
+        val summaryTransactions = listOf(
+            Transaction(
+                date = dateFormatter.format(currentCalendar.time),
+                type = "summary",
+                amount = totalIncome - totalExpense
+            )
+        )
+
+        val adapter = SummaryAdapter(summaryTransactions, "bulanan")
         recyclerView.adapter = adapter
     }
 
@@ -181,35 +190,75 @@ class RiwayatActivity : AppCompatActivity() {
         selectedTab.setBackgroundResource(R.drawable.tab_selected)
         otherTabs.forEach { it.setBackgroundResource(R.drawable.tab_unselected) }
     }
+
+    private fun isInCurrentWeek(date: String): Boolean {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val transactionDate = sdf.parse(date) ?: return false
+
+        val calendar = Calendar.getInstance()
+        calendar.firstDayOfWeek = Calendar.MONDAY
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        val startOfWeek = calendar.time
+
+        calendar.add(Calendar.DAY_OF_WEEK, 6)
+        val endOfWeek = calendar.time
+
+        return transactionDate in startOfWeek..endOfWeek
+    }
+
+    private fun isInCurrentMonth(date: String): Boolean {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val transactionDate = sdf.parse(date) ?: return false
+
+        val calendar = Calendar.getInstance().apply { time = transactionDate }
+        return calendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
+                calendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)
+    }
 }
 
-class TransactionAdapter(private val transactions: List<Transaction>) :
-    RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder>() {
+class SummaryAdapter(private val transactions: List<Transaction>, private val viewType: String) :
+    RecyclerView.Adapter<SummaryAdapter.SummaryViewHolder>() {
 
-    class TransactionViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
+    class SummaryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvDate: TextView = itemView.findViewById(R.id.tvTanggal)
+        val tvAmount: TextView = itemView.findViewById(R.id.tvPengeluaranHarian)
         val tvCategory: TextView = itemView.findViewById(R.id.tvKategori)
         val tvDescription: TextView = itemView.findViewById(R.id.tvKeterangan)
-        val tvAmount: TextView = itemView.findViewById(R.id.tvPengeluaranHarian)
+        val tvDay: TextView = itemView.findViewById(R.id.tvHari)
     }
 
-    override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): TransactionViewHolder {
-        val view = android.view.LayoutInflater.from(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SummaryViewHolder {
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_riwayat_harian, parent, false)
-        return TransactionViewHolder(view)
+        return SummaryViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: TransactionViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: SummaryViewHolder, position: Int) {
         val transaction = transactions[position]
+
         holder.tvDate.text = transaction.date
-        holder.tvCategory.text = transaction.category
-        holder.tvDescription.text = transaction.description
-        holder.tvAmount.text = if (transaction.type == "expense") {
-            "- Rp ${transaction.amount.toInt()}"
+        holder.tvAmount.text = "Rp ${transaction.amount.toInt()}"
+
+        if (viewType == "harian") {
+            holder.tvCategory.visibility = View.VISIBLE
+            holder.tvDescription.visibility = View.VISIBLE
+            holder.tvDay.visibility = View.VISIBLE
+            holder.tvCategory.text = transaction.category
+            holder.tvDescription.text = transaction.description
+            holder.tvDay.text = getDayName(transaction.date)
         } else {
-            "+ Rp ${transaction.amount.toInt()}"
+            holder.tvCategory.visibility = View.GONE
+            holder.tvDescription.visibility = View.GONE
+            holder.tvDay.visibility = View.GONE
         }
     }
 
     override fun getItemCount(): Int = transactions.size
+
+    private fun getDayName(date: String): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val dateObj = sdf.parse(date)
+        val dayFormat = SimpleDateFormat("EEEE", Locale("id", "ID"))
+        return dayFormat.format(dateObj ?: Date())
+    }
 }
