@@ -23,6 +23,8 @@ import java.util.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+
+
 class HomePageActivity : AppCompatActivity() {
 
     private lateinit var tvDate: TextView
@@ -212,6 +214,7 @@ class HomePageActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { snapshot ->
                 val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+
 
                 val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
                 val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
