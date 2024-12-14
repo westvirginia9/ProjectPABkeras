@@ -2,38 +2,32 @@ package com.example.projectpabkeras
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.projectpabkeras.adapters.TransactionAdapter
+import com.example.projectpabkeras.adapters.WeeklyAdapter
+import com.example.projectpabkeras.adapters.MonthlyAdapter
+import com.example.projectpabkeras.models.Transaction
+import com.example.projectpabkeras.models.WeeklySummary
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
-
-data class Transaction(
-    val date: String = "", // Format tanggal: "yyyy-MM-dd"
-    val type: String = "", // "income" atau "expense"
-    val category: String = "",
-    val amount: Double = 0.0,
-    val description: String = ""
-)
 
 class RiwayatActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private val firestore = FirebaseFirestore.getInstance()
     private lateinit var recyclerView: RecyclerView
-    private lateinit var tvPemasukan: TextView
-    private lateinit var tvPengeluaran: TextView
-    private lateinit var tvSisaUang: TextView
     private lateinit var tabHarian: TextView
     private lateinit var tabMingguan: TextView
     private lateinit var tabBulanan: TextView
+    private lateinit var tvPemasukan: TextView
+    private lateinit var tvPengeluaran: TextView
+    private lateinit var tvSisaUang: TextView
     private lateinit var tvDate: TextView
     private val currentCalendar = Calendar.getInstance()
 
@@ -45,46 +39,47 @@ class RiwayatActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
 
-        // Inisialisasi Views
-        tvPemasukan = findViewById(R.id.tv_pemasukan_nominal)
-        tvPengeluaran = findViewById(R.id.tv_pengeluaran_nominal)
-        tvSisaUang = findViewById(R.id.tv_sisa_uang_nominal)
         recyclerView = findViewById(R.id.recyclerView)
         tabHarian = findViewById(R.id.tab_harian)
         tabMingguan = findViewById(R.id.tab_mingguan)
         tabBulanan = findViewById(R.id.tab_bulanan)
+        tvPemasukan = findViewById(R.id.tv_pemasukan_nominal)
+        tvPengeluaran = findViewById(R.id.tv_pengeluaran_nominal)
+        tvSisaUang = findViewById(R.id.tv_sisa_uang_nominal)
         tvDate = findViewById(R.id.tv_date)
 
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Tombol navigasi
+        // Setup navigasi
         setupNavigation()
 
-        // Fetch data awal (Harian)
-        setTabSelected(tabHarian, tabMingguan, tabBulanan)
-        fetchTransactions("harian")
+        // Setup navigasi bulan
+        setupMonthNavigation()
 
-        // Navigasi Tab
+        // Fetch all transactions initially
+        fetchTransactions()
+
+        // Tab navigation
         tabHarian.setOnClickListener {
             setTabSelected(tabHarian, tabMingguan, tabBulanan)
-            fetchTransactions("harian")
+            setupRecyclerViewHarian()
         }
 
         tabMingguan.setOnClickListener {
             setTabSelected(tabMingguan, tabHarian, tabBulanan)
-            fetchTransactions("mingguan")
+            setupRecyclerViewMingguan()
         }
 
         tabBulanan.setOnClickListener {
             setTabSelected(tabBulanan, tabHarian, tabMingguan)
-            fetchTransactions("bulanan")
+            fetchMonthlyTransactions()
         }
+
+        // Update bulan awal
+        updateDateDisplay()
     }
 
     private fun setupNavigation() {
-        val btnBack = findViewById<ImageView>(R.id.btn_back)
-        btnBack.setOnClickListener { onBackPressed() }
-
         val homeButton: ImageView = findViewById(R.id.ic_home)
         homeButton.setOnClickListener {
             startActivity(Intent(this, HomePageActivity::class.java))
@@ -106,7 +101,29 @@ class RiwayatActivity : AppCompatActivity() {
         }
     }
 
-    private fun fetchTransactions(viewType: String) {
+    private fun setupMonthNavigation() {
+        val ivLeft: ImageView = findViewById(R.id.if_left)
+        val ivRight: ImageView = findViewById(R.id.if_right)
+
+        ivLeft.setOnClickListener {
+            currentCalendar.add(Calendar.MONTH, -1) // Mundur 1 bulan
+            updateDateDisplay()
+            fetchMonthlyTransactions()
+        }
+
+        ivRight.setOnClickListener {
+            currentCalendar.add(Calendar.MONTH, 1) // Maju 1 bulan
+            updateDateDisplay()
+            fetchMonthlyTransactions()
+        }
+    }
+
+    private fun updateDateDisplay() {
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
+        tvDate.text = monthFormat.format(currentCalendar.time)
+    }
+
+    private fun fetchTransactions() {
         val userId = auth.currentUser?.uid ?: return
 
         firestore.collection("transactions")
@@ -114,13 +131,7 @@ class RiwayatActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { snapshot ->
                 transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
-
-                when (viewType) {
-                    "harian" -> setupRecyclerViewHarian()
-                    "mingguan" -> setupRecyclerViewMingguan()
-                    "bulanan" -> setupRecyclerViewBulanan()
-                }
-
+                setupRecyclerViewHarian()
                 updateSummary()
             }
             .addOnFailureListener {
@@ -139,126 +150,106 @@ class RiwayatActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerViewHarian() {
-        val adapter = SummaryAdapter(transactions, "harian")
+        val adapter = TransactionAdapter(transactions)
         recyclerView.adapter = adapter
     }
 
     private fun setupRecyclerViewMingguan() {
-        val calendar = Calendar.getInstance()
-        val today = calendar.time
-        calendar.add(Calendar.DAY_OF_YEAR, -6)
-        val startOfWeek = calendar.time
-
-        val dateFormatter = SimpleDateFormat("dd-MM-yyyy", Locale("id", "ID"))
-        tvDate.text = "${dateFormatter.format(startOfWeek)} s/d ${dateFormatter.format(today)}"
-
-        val totalIncome = transactions.filter { isInCurrentWeek(it.date) && it.type == "income" }.sumOf { it.amount }
-        val totalExpense = transactions.filter { isInCurrentWeek(it.date) && it.type == "expense" }.sumOf { it.amount }
-
-        val summaryTransactions = listOf(
-            Transaction(
-                date = "${dateFormatter.format(startOfWeek)} s/d ${dateFormatter.format(today)}",
-                type = "summary",
-                amount = totalIncome - totalExpense
-            )
-        )
-
-        val adapter = SummaryAdapter(summaryTransactions, "mingguan")
+        val weeklySummaries = groupTransactionsByWeek(transactions)
+        val adapter = WeeklyAdapter(weeklySummaries)
         recyclerView.adapter = adapter
     }
 
-    private fun setupRecyclerViewBulanan() {
-        val dateFormatter = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
-        tvDate.text = dateFormatter.format(currentCalendar.time)
+    private fun fetchMonthlyTransactions() {
+        val userId = auth.currentUser?.uid ?: return
 
-        val totalIncome = transactions.filter { isInCurrentMonth(it.date) && it.type == "income" }.sumOf { it.amount }
-        val totalExpense = transactions.filter { isInCurrentMonth(it.date) && it.type == "expense" }.sumOf { it.amount }
+        firestore.collection("transactions")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val filteredTransactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                    .filter { transaction ->
+                        val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
+                        val transactionCalendar = Calendar.getInstance()
+                        transactionCalendar.time = transactionDate ?: Date()
 
-        val summaryTransactions = listOf(
-            Transaction(
-                date = dateFormatter.format(currentCalendar.time),
-                type = "summary",
-                amount = totalIncome - totalExpense
-            )
+                        // Filter transaksi berdasarkan bulan dan tahun yang dipilih
+                        transactionCalendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
+                                transactionCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)
+                    }
+
+                // Setelah data difilter, update tampilan
+                updateMonthlySummary(filteredTransactions)
+            }
+            .addOnFailureListener {
+                // Handle error jika pengambilan data gagal
+            }
+    }
+
+    private fun updateMonthlySummary(transactions: List<Transaction>) {
+        val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
+        val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+
+        // Perbarui nilai pemasukan, pengeluaran, dan sisa uang di bagian atas
+        tvPemasukan.text = "Rp ${totalIncome.toInt()}"
+        tvPengeluaran.text = "Rp ${totalExpense.toInt()}"
+        tvSisaUang.text = "Rp ${(totalIncome - totalExpense).toInt()}"
+
+        // Buat summary untuk RecyclerView
+        val summary = WeeklySummary(
+            "${SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(currentCalendar.time)}",
+            totalIncome,
+            totalExpense
         )
 
-        val adapter = SummaryAdapter(summaryTransactions, "bulanan")
+        // Tampilkan summary di RecyclerView
+        val adapter = MonthlyAdapter(listOf(summary))
         recyclerView.adapter = adapter
+    }
+
+
+
+    private fun setupRecyclerViewBulanan(transactions: List<Transaction>) {
+        val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
+        val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+
+        val summary = WeeklySummary(
+            "${SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(currentCalendar.time)}",
+            totalIncome,
+            totalExpense
+        )
+
+        val adapter = MonthlyAdapter(listOf(summary))
+        recyclerView.adapter = adapter
+    }
+
+    private fun groupTransactionsByWeek(transactions: List<Transaction>): List<WeeklySummary> {
+        val weeklySummaries = mutableListOf<WeeklySummary>()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+
+        transactions.groupBy {
+            val date = dateFormat.parse(it.date)
+            calendar.time = date ?: Date()
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            dateFormat.format(calendar.time)
+        }.forEach { (startOfWeek, weekTransactions) ->
+            val startDate = dateFormat.parse(startOfWeek)
+            calendar.time = startDate ?: Date()
+            calendar.add(Calendar.DAY_OF_WEEK, 6)
+            val endOfWeek = dateFormat.format(calendar.time)
+
+            val totalIncome = weekTransactions.filter { it.type == "income" }.sumOf { it.amount }
+            val totalExpense = weekTransactions.filter { it.type == "expense" }.sumOf { it.amount }
+
+            weeklySummaries.add(WeeklySummary("$startOfWeek s/d $endOfWeek", totalIncome, totalExpense))
+        }
+
+        return weeklySummaries
     }
 
     private fun setTabSelected(selectedTab: TextView, vararg otherTabs: TextView) {
         selectedTab.setBackgroundResource(R.drawable.tab_selected)
         otherTabs.forEach { it.setBackgroundResource(R.drawable.tab_unselected) }
-    }
-
-    private fun isInCurrentWeek(date: String): Boolean {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val transactionDate = sdf.parse(date) ?: return false
-
-        val calendar = Calendar.getInstance()
-        calendar.firstDayOfWeek = Calendar.MONDAY
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-        val startOfWeek = calendar.time
-
-        calendar.add(Calendar.DAY_OF_WEEK, 6)
-        val endOfWeek = calendar.time
-
-        return transactionDate in startOfWeek..endOfWeek
-    }
-
-    private fun isInCurrentMonth(date: String): Boolean {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val transactionDate = sdf.parse(date) ?: return false
-
-        val calendar = Calendar.getInstance().apply { time = transactionDate }
-        return calendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
-                calendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)
-    }
-}
-
-class SummaryAdapter(private val transactions: List<Transaction>, private val viewType: String) :
-    RecyclerView.Adapter<SummaryAdapter.SummaryViewHolder>() {
-
-    class SummaryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvDate: TextView = itemView.findViewById(R.id.tvTanggal)
-        val tvAmount: TextView = itemView.findViewById(R.id.tvPengeluaranHarian)
-        val tvCategory: TextView = itemView.findViewById(R.id.tvKategori)
-        val tvDescription: TextView = itemView.findViewById(R.id.tvKeterangan)
-        val tvDay: TextView = itemView.findViewById(R.id.tvHari)
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SummaryViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_riwayat_harian, parent, false)
-        return SummaryViewHolder(view)
-    }
-
-    override fun onBindViewHolder(holder: SummaryViewHolder, position: Int) {
-        val transaction = transactions[position]
-
-        holder.tvDate.text = transaction.date
-        holder.tvAmount.text = "Rp ${transaction.amount.toInt()}"
-
-        if (viewType == "harian") {
-            holder.tvCategory.visibility = View.VISIBLE
-            holder.tvDescription.visibility = View.VISIBLE
-            holder.tvDay.visibility = View.VISIBLE
-            holder.tvCategory.text = transaction.category
-            holder.tvDescription.text = transaction.description
-            holder.tvDay.text = getDayName(transaction.date)
-        } else {
-            holder.tvCategory.visibility = View.GONE
-            holder.tvDescription.visibility = View.GONE
-            holder.tvDay.visibility = View.GONE
-        }
-    }
-
-    override fun getItemCount(): Int = transactions.size
-
-    private fun getDayName(date: String): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val dateObj = sdf.parse(date)
-        val dayFormat = SimpleDateFormat("EEEE", Locale("id", "ID"))
-        return dayFormat.format(dateObj ?: Date())
     }
 }
