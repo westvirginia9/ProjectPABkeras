@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".DetailGrafikActivity">
+
+    <!-- Toolbar -->
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal"
+        android:background="#285F55"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back button"
+            android:layout_gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:text="Detail Grafik"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:layout_above="@+id/bottom_navigation">
+
+        <!-- Wrapper: LinearLayout -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RelativeLayout
+                android:id="@+id/chart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <!-- TextView untuk menampilkan bulan dan tahun -->
+                <TextView
+                    android:id="@+id/grafik_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="30dp"
+                    android:text="Nov - 2024"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <!-- Tombol kiri untuk memilih bulan sebelumnya -->
+                <ImageView
+                    android:id="@+id/iv_left"
+                    android:layout_width="18dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_left" />
+
+                <!-- Tombol kanan untuk memilih bulan berikutnya -->
+                <ImageView
+                    android:id="@+id/iv_right"
+                    android:layout_width="18dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="113dp"
+                    android:src="@drawable/ic_right" />
+
+                <!-- PieChart -->
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pie_chart"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_below="@id/grafik_date"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp" />
+            </RelativeLayout>
+
+            <!-- List kategori -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_categories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/chart"
+                android:layout_margin="16dp"
+                android:padding="8dp"
+                android:clipToPadding="false" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#004D40"
+        android:gravity="center"
+        android:weightSum="5">
+
+        <!-- Home -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_home"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                android:contentDescription="Home"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Goals -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/goals_bottom"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_goals"
+                android:contentDescription="Goals"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Goals"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Pencapaian -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/icAchievement"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_pencapaian"
+                android:contentDescription="Pencapaian"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pencapaian"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Riwayat -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_history"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history"
+                android:contentDescription="Riwayat"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Riwayat"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Profil -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_profile"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                android:contentDescription="Profil"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profil"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>

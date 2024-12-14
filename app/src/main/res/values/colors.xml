@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="green_active">#D6F0EB</color>
+    <color name="ijo">#D6F0EB</color> <!-- Warna hijau muda -->
+    <color name="primaryColor">#285F55</color> <!-- Hijau utama untuk Toolbar dan elemen lainnya -->
+        <color name="active_tab">#0FF2D7</color>
+        <color name="inactive_tab">#FFFFFF</color>
+    <color name="gray">#9E9E9E</color>
+    <color name="red">#FE0D11</color>
+    <color name="blue">#87CEEB</color>
+    <color name="blue2">#1EC8B0</color>
+    <color name="progress_green">#0FF2D7</color>
+    <color name="progress_background">#E0E0E0</color> <!-- Warna background progress -->
+    <color name="selected_tab">#0FF2D7</color> <!-- Sama dengan active_tab untuk konsistensi -->
+    <color name="unselected_tab">#D3D3D3</color> <!-- Warna abu-abu untuk tab tidak aktif -->
+    <color name="cardBackground">#4EBBA8</color>
+    <color name="cardA1">#E7F9F5</color>
+</resources>

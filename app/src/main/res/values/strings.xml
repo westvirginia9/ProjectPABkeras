@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">ProjectPABkeras</string>
+    <!-- Kategori untuk Spinner -->
+    <string-array name="kategori_pengeluaran">
+        <item>Kebutuhan Pokok</item>
+        <item>Tabungan</item>
+        <item>Kebutuhan Entertainment</item>
+        <item>Sosial</item>
+    </string-array>
+    <string name="achievement_icon">Ikon pencapaian</string>
+
+
+</resources>

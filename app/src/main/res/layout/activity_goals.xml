@@ -1,0 +1,306 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <!-- Header Section (Hijau) -->
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:background="#285F55"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back button"
+            android:layout_gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_gravity="center_vertical"
+            android:text="Goals"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolbar"
+        android:layout_above="@+id/bottom_navigation">
+
+        <!-- Wrapper: LinearLayout -->
+        <LinearLayout
+            android:id="@+id/goalContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Goal Card 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:background="@drawable/bg_card"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Milestone"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvGoalTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Beli Laptop Baru"
+                    android:textColor="@color/black"
+                    android:textSize="14sp"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvDateRange"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="21/11/2024 s/d 21/01/2025"
+                    android:textColor="@color/red"
+                    android:textSize="12sp"
+                    android:layout_marginTop="2dp" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="10dp"
+                    android:progressDrawable="@drawable/progress_bar_foreground"
+                    android:indeterminate="false"
+                    android:max="100"
+                    android:progress="10"
+                    android:background="@drawable/progress_bar_background"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvProgress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rp 1.500.000 / 15.000.000 (10%)"
+                    android:textColor="@color/black"
+                    android:textSize="12sp"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Semoga bisa tercapai, aamiin"
+                    android:textColor="@color/gray"
+                    android:textSize="12sp"
+                    android:layout_marginTop="8dp" />
+
+                <!-- Buttons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <Button
+                        android:id="@+id/btn_edit_goal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Edit"
+                        android:textSize="12sp"
+                        android:backgroundTint="@color/primaryColor"
+                        android:textColor="@color/white" />
+
+                    <Button
+                        android:id="@+id/btn_update_goal"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Update"
+                        android:textSize="12sp"
+                        android:layout_marginStart="8dp"
+                        android:backgroundTint="@color/primaryColor"
+                        android:textColor="@color/white" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Copy the above block for additional cards -->
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Floating Action Button (FAB) -->
+    <ImageButton
+        android:id="@+id/btn_fabgoals"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="70dp"
+        android:layout_marginRight="15dp"
+        android:backgroundTint="#285F55"
+        android:elevation="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/fab_background" />
+
+    <!-- Bottom Bar -->
+    <LinearLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#004D40"
+        android:gravity="center"
+        android:weightSum="5">
+
+        <!-- Home -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_home"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                android:contentDescription="Home"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Goals -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/goals_bottom"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_goals"
+                android:contentDescription="Goals"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Goals"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Pencapaian -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/icAchievement"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_pencapaian"
+                android:contentDescription="Pencapaian"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pencapaian"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Riwayat -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_history"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history"
+                android:contentDescription="Riwayat"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Riwayat"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Profil -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_profile"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                android:contentDescription="Profil"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profil"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

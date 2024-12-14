@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "139468312246",
+    "project_id": "projectpabkeras-7404b",
+    "storage_bucket": "projectpabkeras-7404b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:139468312246:android:cd987e0c9b11a55a8a2017",
+        "android_client_info": {
+          "package_name": "com.example.projectpabkeras"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcyEWaYcOT6NXhkuIKLf7s-52fpvJZFsA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

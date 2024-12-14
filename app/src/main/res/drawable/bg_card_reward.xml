@@ -1,0 +1,27 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Lapisan gradasi warna -->
+
+    <!-- Lapisan bentuk dengan sudut membulat, garis luar, dan padding -->
+    <item>
+        <shape>
+            <!-- Warna latar belakang putih (opsional, bisa transparan jika gradasi penuh) -->
+            <solid android:color="#FFCD0F"/>
+
+            <!-- Sudut membulat -->
+            <corners android:radius="16dp" />
+
+            <!-- Garis luar kartu -->
+            <stroke
+                android:width="1dp"
+                android:color="#E0E0E0" />
+
+            <!-- Padding untuk elemen dalam kartu -->
+            <padding
+                android:left="8dp"
+                android:top="8dp"
+                android:right="8dp"
+                android:bottom="8dp" />
+        </shape>
+    </item>
+</layer-list>

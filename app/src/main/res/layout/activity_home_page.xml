@@ -1,0 +1,939 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <!-- Header Section (Hijau) -->
+    <RelativeLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="#285F55"
+        android:padding="16dp">
+
+        <!-- TextView untuk Finfit -->
+        <TextView
+            android:id="@+id/finfitText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="FinFit"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_alignParentStart="true" />
+
+        <!-- TextView untuk Hai Lutfi! -->
+        <TextView
+            android:id="@+id/welcomeText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hai Lutfi!"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_below="@id/finfitText"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="20dp" />
+
+        <!-- TextView untuk tagline -->
+        <TextView
+            android:id="@+id/taglineText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Atur Keuanganmu, Capai Impianmu!"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:layout_below="@id/welcomeText"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp" />
+
+        <!-- LinearLayout untuk ikon Settings dan Notification -->
+        <LinearLayout
+            android:id="@+id/iconContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:gravity="center_vertical">
+
+            <!-- Ikon Notification -->
+            <ImageView
+                android:id="@+id/icNotification"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_notification"
+                android:contentDescription="Notification"
+                android:padding="8dp" />
+
+            <!-- Ikon Settings -->
+            <ImageView
+                android:id="@+id/icSettings"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_settings"
+                android:contentDescription="Settings"
+                android:padding="8dp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+
+    <!-- Scrollable Content -->
+
+
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/header"
+        android:layout_above="@+id/bottom_navigation">
+
+        <!-- Wrapper: LinearLayout -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Bagian yang sebelumnya langsung di dalam ScrollView -->
+
+
+            <!-- Grafik Pengeluaran -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/bg_card">
+
+                <!-- Date Picker Icon -->
+                <TextView
+                    android:id="@+id/tv_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginStart="30dp"
+                    android:text="Nov - 2024"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/if_left"
+                    android:layout_width="18dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_left" />
+
+                <ImageView
+                    android:id="@+id/if_right"
+                    android:layout_width="18dp"
+                    android:layout_height="20dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_marginStart="113dp"
+                    android:src="@drawable/ic_right" />
+
+                <!-- Eye Icon -->
+                <ImageView
+                    android:id="@+id/eye_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Lihat Detail"
+                    android:src="@drawable/lefteye" />
+
+                <!-- Main Content -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_date"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal"
+                    android:paddingTop="6dp"
+                    android:weightSum="3">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="#FAF9F9"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_pemasukan_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pemasukan"
+                            android:textColor="#004D40"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_pemasukan_nominal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rp 1.800.000"
+                            android:textColor="#000000"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Pengeluaran -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="#FAF9F9"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_pengeluaran_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pengeluaran"
+                            android:textColor="#B71C1C"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_pengeluaran_nominal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="-"
+                            android:textColor="#000000"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <!-- Sisa Uang -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="#FAF9F9"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:id="@+id/tv_sisa_uang_label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sisa Uang"
+                            android:textColor="#0D47A1"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tv_sisa_uang_nominal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Rp 1.800.000"
+                            android:textColor="#000000"
+                            android:textSize="14sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </RelativeLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="#FFFFFF"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <!-- TextView Reward Spesial -->
+                    <TextView
+                        android:id="@+id/grafikTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Grafik Pengeluaran"
+                        android:textColor="#004D40"
+                        android:textSize="16sp"
+                        android:paddingBottom="3dp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true" />
+
+                    <!-- TextView Lihat Detail -->
+                    <TextView
+                        android:id="@+id/seeDetailsGrafik"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lihat Detail"
+                        android:textColor="#00796B"
+                        android:paddingBottom="3dp"
+                        android:textSize="14sp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <!-- TextView untuk menampilkan bulan dan tahun -->
+                    <TextView
+                        android:id="@+id/grafik_date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
+                        android:layout_marginStart="30dp"
+                        android:text="Nov - 2024"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <!-- Tombol kiri untuk memilih bulan sebelumnya -->
+                    <ImageView
+                        android:id="@+id/iv_left"
+                        android:layout_width="18dp"
+                        android:layout_height="20dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="8dp"
+                        android:src="@drawable/ic_left" />
+
+                    <!-- Tombol kanan untuk memilih bulan berikutnya -->
+                    <ImageView
+                        android:id="@+id/iv_right"
+                        android:layout_width="18dp"
+                        android:layout_height="20dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_marginStart="113dp"
+                        android:src="@drawable/ic_right" />
+
+                    <!-- PieChart -->
+                    <com.github.mikephil.charting.charts.PieChart
+                        android:id="@+id/pieChart"
+                        android:layout_width="match_parent"
+                        android:layout_height="300dp"
+                        android:layout_below="@id/grafik_date"
+                        android:layout_marginTop="20dp" />
+                </RelativeLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <!-- TextView Reward Spesial -->
+                    <TextView
+                        android:id="@+id/rewardTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reward Spesial"
+                        android:paddingBottom="3dp"
+                        android:textColor="#004D40"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentStart="true" />
+
+                    <!-- TextView Lihat Semua -->
+                    <TextView
+                        android:id="@+id/seeAllRewards"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Lihat Semua"
+                        android:textColor="#00796B"
+                        android:textSize="14sp"
+                        android:paddingBottom="3dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </RelativeLayout>
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- Placeholder untuk Voucher 1 -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:background="@drawable/bg_card_reward"
+                            android:gravity="center_vertical">
+
+                            <!-- Icon Voucher -->
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/ic_voucher_placeholder"
+                                android:contentDescription="Icon Voucher" />
+
+                            <!-- Informasi Voucher -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Voucher Indosat"
+                                    android:textStyle="bold"
+                                    android:textSize="14sp"
+                                    android:textColor="@color/black"
+                                    android:layout_marginBottom="4dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="500mb/2hari"
+                                    android:textStyle="bold"
+                                    android:textSize="12sp"
+                                    android:textColor="@color/red" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Placeholder untuk Voucher 2 -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="100dp"
+                            android:layout_marginEnd="8dp"
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:background="@drawable/bg_card_reward"
+                            android:gravity="center_vertical">
+
+                            <!-- Icon Voucher -->
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/ic_voucher_placeholder"
+                                android:contentDescription="Icon Voucher" />
+
+                            <!-- Informasi Voucher -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Voucher Indosat"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/black"
+                                    android:layout_marginBottom="4dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="1gb/3hari"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/red" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <!-- Placeholder untuk Voucher 3 -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="100dp"
+                            android:orientation="horizontal"
+                            android:padding="16dp"
+                            android:background="@drawable/bg_card_reward"
+                            android:gravity="center_vertical">
+
+                            <!-- Icon Voucher -->
+                            <ImageView
+                                android:layout_width="40dp"
+                                android:layout_height="40dp"
+                                android:src="@drawable/ic_voucher_placeholder"
+                                android:contentDescription="Icon Voucher" />
+
+                            <!-- Informasi Voucher -->
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Voucher Indosat"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/black"
+                                    android:layout_marginBottom="4dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="2gb/7hari"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="@color/red" />
+                            </LinearLayout>
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+            </LinearLayout>
+
+            <!-- Kategori -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="10dp"
+                android:layout_marginBottom="20dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Kategori"
+                    android:layout_marginTop="10dp"
+                    android:textColor="#004D40"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:paddingBottom="3dp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <!-- Placeholder untuk Kategori 1 -->
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp">
+
+                            <!-- Card Kategori -->
+                            <LinearLayout
+                                android:layout_width="220dp"
+                                android:layout_height="100dp"
+                                android:background="@drawable/bg_card_kategori"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:padding="16dp">
+
+                                <!-- Icon Kategori -->
+                                <ImageView
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:contentDescription="Icon Kategori"
+                                    android:src="@drawable/ic_pokok" />
+
+                                <!-- Informasi Kategori -->
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="16dp"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginBottom="4dp"
+                                        android:text="Kebutuhan Dasar"
+                                        android:textColor="@color/black"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold" />
+                                    <!-- Progress kategori -->
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="10.000/200.000"
+                                        android:textColor="@color/red"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Icon Informasi -->
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_info"
+                                android:contentDescription="Info"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginEnd="8dp" />
+                        </FrameLayout>
+
+                        <!-- Placeholder untuk Kategori 2 -->
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp">
+
+                            <!-- Card Kategori -->
+                            <LinearLayout
+                                android:layout_width="220dp"
+                                android:layout_height="100dp"
+                                android:orientation="horizontal"
+                                android:padding="16dp"
+                                android:background="@drawable/bg_card_kategori"
+                                android:gravity="center_vertical">
+
+                                <!-- Icon Kategori -->
+                                <ImageView
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:src="@drawable/ic_entertainment"
+                                    android:contentDescription="Icon Kategori" />
+
+                                <!-- Informasi Kategori -->
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Entertainment"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/black"
+                                        android:layout_marginBottom="4dp" />
+                                    <!-- Progress kategori -->
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="10.000/200.000"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/red" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Icon Informasi -->
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_info"
+                                android:contentDescription="Info"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginEnd="8dp" />
+                        </FrameLayout>
+
+                        <!-- Placeholder untuk Kategori 3 -->
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp">
+
+                            <!-- Card Kategori -->
+                            <LinearLayout
+                                android:layout_width="220dp"
+                                android:layout_height="100dp"
+                                android:orientation="horizontal"
+                                android:padding="16dp"
+                                android:background="@drawable/bg_card_kategori"
+                                android:gravity="center_vertical">
+
+                                <!-- Icon Kategori -->
+                                <ImageView
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:src="@drawable/ic_savings"
+                                    android:contentDescription="Icon Kategori" />
+
+                                <!-- Informasi Kategori -->
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Tabungan"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/black"
+                                        android:layout_marginBottom="4dp" />
+                                    <!-- Progress kategori -->
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="10.000/200.000"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/red" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Icon Informasi -->
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_info"
+                                android:contentDescription="Info"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginEnd="8dp" />
+                        </FrameLayout>
+
+                        <!-- Placeholder untuk Kategori 2 -->
+                        <FrameLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp">
+
+                            <!-- Card Kategori -->
+                            <LinearLayout
+                                android:layout_width="220dp"
+                                android:layout_height="100dp"
+                                android:orientation="horizontal"
+                                android:padding="16dp"
+                                android:background="@drawable/bg_card_kategori"
+                                android:gravity="center_vertical">
+
+                                <!-- Icon Kategori -->
+                                <ImageView
+                                    android:layout_width="40dp"
+                                    android:layout_height="40dp"
+                                    android:src="@drawable/ic_social"
+                                    android:contentDescription="Icon Kategori" />
+
+                                <!-- Informasi Kategori -->
+                                <LinearLayout
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:orientation="vertical"
+                                    android:layout_marginStart="16dp">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Social"
+                                        android:textSize="14sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/black"
+                                        android:layout_marginBottom="4dp" />
+                                    <!-- Progress kategori -->
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="10.000/200.000"
+                                        android:textSize="12sp"
+                                        android:textStyle="bold"
+                                        android:textColor="@color/red" />
+                                </LinearLayout>
+                            </LinearLayout>
+
+                            <!-- Icon Informasi -->
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:src="@drawable/ic_info"
+                                android:contentDescription="Info"
+                                android:layout_gravity="top|end"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginEnd="8dp" />
+                        </FrameLayout>
+
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+
+    <!-- Floating Action Button (FAB) -->
+    <ImageButton
+        android:id="@+id/btn_fab"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="60dp"
+        android:layout_marginRight="20dp"
+        android:backgroundTint="#285F55"
+        android:elevation="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/fab_background"/>
+
+    <!-- Bottom Bar -->
+    <LinearLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#004D40"
+        android:gravity="center"
+        android:weightSum="5">
+
+        <!-- Home -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_home"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                android:contentDescription="Home"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Goals -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/goals_bottom"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_goals"
+                android:contentDescription="Goals"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Goals"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Pencapaian -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/icAchievement"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_pencapaian"
+                android:contentDescription="Pencapaian"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pencapaian"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Riwayat -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_history"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history"
+                android:contentDescription="Riwayat"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Riwayat"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Profil -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_profile"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                android:contentDescription="Profil"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profil"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+</RelativeLayout>

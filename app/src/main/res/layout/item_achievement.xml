@@ -1,0 +1,57 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/bg_card_achievement"
+    android:elevation="8dp"
+    android:gravity="center_vertical">
+
+    <!-- Icon Achievement -->
+    <ImageView
+        android:id="@+id/iconAchievement"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_achievement_icon"
+        android:contentDescription="@string/achievement_icon"
+        android:layout_marginEnd="12dp" />
+
+    <!-- Kontainer untuk teks -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Judul Achievements -->
+        <TextView
+            android:id="@+id/textAchievementTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Berhasil Menyelesaikan 1 Kali Milestone"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black" />
+
+        <!-- Level Progress -->
+        <TextView
+            android:id="@+id/textAchievementLevel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Level: 1/5"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
+    <!-- XP Gained -->
+    <TextView
+        android:id="@+id/textAchievementEXP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="+100 EXP"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@color/black" />
+</LinearLayout>

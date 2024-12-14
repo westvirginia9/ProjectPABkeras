@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="@android:color/white">
+
+    <!-- Indikator warna -->
+    <View
+        android:id="@+id/category_indicator"
+        android:layout_width="8dp"
+        android:layout_height="match_parent"
+        android:layout_marginEnd="8dp"
+        android:background="#000000" />
+
+    <!-- Kontainer teks -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- Nama kategori dan persentase -->
+        <TextView
+            android:id="@+id/category_name_percentage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="24% Kebutuhan Dasar"
+            android:textColor="#000"
+            android:textSize="16sp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:singleLine="true" />
+
+        <!-- Nominal jumlah -->
+        <TextView
+            android:id="@+id/category_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rp. 350.000"
+            android:textColor="#808080"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Panah ke kanan -->
+    <TextView
+        android:id="@+id/arrow_right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=">"
+        android:textColor="#808080"
+        android:textSize="16sp" />
+</LinearLayout>

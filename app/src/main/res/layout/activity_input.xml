@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".InputActivity">
+
+    <!-- Toolbar -->
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:background="#285F55"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/btn_back"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back button"
+            android:layout_gravity="center_vertical"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_gravity="center_vertical"
+            android:textStyle="bold"
+            android:text="Input Catatan Keuangan"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <!-- Tab Layout -->
+    <LinearLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_below="@id/toolbar"
+        android:orientation="horizontal"
+        android:background="@color/white">
+
+        <Button
+            android:id="@+id/btn_pengeluaran"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:backgroundTint="#0FF2D7"
+            android:textStyle="bold"
+            android:text="Pengeluaran"
+            android:textColor="@color/black" />
+
+        <Button
+            android:id="@+id/btn_pemasukan"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:backgroundTint="#FFFFFF"
+            android:textStyle="bold"
+            android:text="Pemasukan"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+    <!-- Form Pengeluaran -->
+    <LinearLayout
+        android:id="@+id/layout_pengeluaran"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tab_layout"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card"
+        android:padding="16dp">
+
+        <!-- Tanggal -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Tanggal"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <EditText
+                android:id="@+id/et_tanggal_pengeluaran"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:background="@drawable/ic_rounded1"
+                android:drawableEnd="@drawable/ic_date"
+                android:drawablePadding="8dp"
+                android:hint="Pilih tanggal"
+                android:focusable="false"
+                android:clickable="true"
+                android:textSize="13sp"
+                android:padding="8dp" />
+        </LinearLayout>
+
+        <!-- Kategori -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Kategori"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <Spinner
+                android:id="@+id/spinner_kategori"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:background="@drawable/spinner_background"
+                android:paddingStart="8dp"
+                android:paddingEnd="10dp"
+                android:spinnerMode="dropdown"
+                android:popupBackground="@color/white" />
+        </LinearLayout>
+
+        <!-- Keterangan -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Keterangan"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+            <EditText
+                android:id="@+id/et_keterangan_pengeluaran"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:hint="Isi Keterangan"
+                android:textSize="13sp"
+                android:background="@drawable/ic_rounded1"
+                android:padding="8dp" />
+        </LinearLayout>
+
+        <!-- Jumlah -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Jumlah"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <EditText
+                android:id="@+id/et_jumlah_pengeluaran"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:hint="Masukkan Jumlah"
+                android:inputType="numberDecimal"
+                android:textSize="13sp"
+                android:background="@drawable/ic_rounded1"
+                android:padding="8dp" />
+        </LinearLayout>
+
+        <!-- Simpan Button -->
+        <Button
+            android:id="@+id/btn_simpan_pengeluaran"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="13dp"
+            android:textStyle="bold"
+            android:backgroundTint="#0FF2D7"
+            android:text="Simpan"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+    <!-- Form Pemasukan -->
+    <LinearLayout
+        android:id="@+id/layout_pemasukan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tab_layout"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <!-- Tanggal -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Tanggal"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <EditText
+                android:id="@+id/et_tanggal_pemasukan"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:background="@drawable/ic_rounded1"
+                android:drawableEnd="@drawable/ic_date"
+                android:drawablePadding="8dp"
+                android:hint="Pilih tanggal"
+                android:focusable="false"
+                android:clickable="true"
+                android:textSize="13sp"
+                android:padding="8dp" />
+        </LinearLayout>
+
+        <!-- Keterangan -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="Keterangan"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+            <EditText
+                android:id="@+id/et_keterangan_pemasukan"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:hint="Isi Keterangan"
+                android:textSize="13sp"
+                android:background="@drawable/ic_rounded1"
+                android:padding="8dp" />
+        </LinearLayout>
+
+        <!-- Jumlah -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:text="Jumlah"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <EditText
+                android:id="@+id/et_jumlah_pemasukan"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="35dp"
+                android:hint="Masukkan Jumlah"
+                android:inputType="numberDecimal"
+                android:textSize="13sp"
+                android:background="@drawable/ic_rounded1"
+                android:padding="8dp" />
+        </LinearLayout>
+
+        <!-- Simpan Button -->
+        <Button
+            android:id="@+id/btn_simpan_pemasukan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="13dp"
+            android:textStyle="bold"
+            android:backgroundTint="#0FF2D7"
+            android:text="Simpan"
+            android:textColor="@color/black"/>
+
+
+        <!-- Simpan Button -->
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
+        android:background="#004D40"
+        android:gravity="center"
+        android:weightSum="5">
+
+        <!-- Home -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_home"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_home"
+                android:contentDescription="Home"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Home"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Goals -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/goals_bottom"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_goals"
+                android:contentDescription="Goals"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Goals"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Pencapaian -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/icAchievement"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_pencapaian"
+                android:contentDescription="Pencapaian"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pencapaian"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Riwayat -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_history"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_history"
+                android:contentDescription="Riwayat"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Riwayat"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Profil -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/ic_profile"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_profile"
+                android:contentDescription="Profil"
+                android:padding="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profil"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:gravity="center" />
+        </LinearLayout>
+    </LinearLayout>
+
+</RelativeLayout>
