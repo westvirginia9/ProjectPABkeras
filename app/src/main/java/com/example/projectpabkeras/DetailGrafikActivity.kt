@@ -4,21 +4,32 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.projectpabkeras.models.Transaction
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
 import com.github.mikephil.charting.formatter.PercentFormatter
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.*
 
 class DetailGrafikActivity : AppCompatActivity() {
 
     private lateinit var pieChart: PieChart
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: CategoryAdapter
+    private lateinit var tvDate: TextView
+    private lateinit var ivLeft: ImageView
+    private lateinit var ivRight: ImageView
+    private var currentCalendar: Calendar = Calendar.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,124 +38,128 @@ class DetailGrafikActivity : AppCompatActivity() {
         // Inisialisasi View
         pieChart = findViewById(R.id.pie_chart)
         recyclerView = findViewById(R.id.recycler_view_categories)
+        tvDate = findViewById(R.id.grafik_date)
+        ivLeft = findViewById(R.id.iv_left)
+        ivRight = findViewById(R.id.iv_right)
         val btnBack = findViewById<ImageView>(R.id.btn_back)
 
         // Tombol kembali
         btnBack.setOnClickListener { onBackPressed() }
 
-        // Tombol Goals
-        val goalsButton: ImageView = findViewById(R.id.goals_bottom)
-        goalsButton.setOnClickListener {
-            val intent = Intent(this, GoalsActivity::class.java)
-            startActivity(intent)
+        // Navigasi bulan
+        updateDateDisplay()
+        ivLeft.setOnClickListener {
+            currentCalendar.add(Calendar.MONTH, -1) // Mundur bulan
+            updateDateDisplay()
+            loadChartData()
+        }
+        ivRight.setOnClickListener {
+            currentCalendar.add(Calendar.MONTH, 1) // Maju bulan
+            updateDateDisplay()
+            loadChartData()
         }
 
-        // Tombol Achievement
-        val achievementButton: ImageView = findViewById(R.id.icAchievement)
-        achievementButton.setOnClickListener {
-            val intent = Intent(this, AchievementActivity::class.java)
-            startActivity(intent)
-        }
+        // Tombol navigasi lainnya
+        setupNavigation()
 
-        // Tombol Achievement
-        val homeButton: ImageView = findViewById(R.id.ic_home)
-        homeButton.setOnClickListener {
-            val intent = Intent(this, HomePageActivity::class.java)
-            startActivity(intent)
-        }
-        val icRiwayat: ImageView = findViewById(R.id.ic_history)
-        icRiwayat.setOnClickListener {
-            val intent = Intent(this, RiwayatActivity::class.java)
-            startActivity(intent)
-        }
-        val profileButton: ImageView = findViewById(R.id.ic_profile)
-        profileButton.setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
-        }
+        // Muat data grafik awal
+        loadChartData()
+    }
 
-        // Data Kategori (dengan daftar pengeluaran)
-        val categories = listOf(
-            CategoryAdapter.Category(
-                "Kebutuhan Pokok",
-                40,
-                350000,
-                Color.parseColor("#4CAF50"),
-                listOf(
-                    Expense("1 Nov 2024", "Makan", 20000.0),
-                    Expense("2 Nov 2024", "Transportasi", 50000.0)
-                )
-            ),
-            CategoryAdapter.Category(
-                "Entertainment",
-                20,
-                20000,
-                Color.parseColor("#FF9800"),
-                listOf(
-                    Expense("3 Nov 2024", "Bioskop", 60000.0)
-                )
-            ),
-            CategoryAdapter.Category(
-                "Tabungan",
-                25,
-                300000,
-                Color.parseColor("#2196F3"),
-                listOf(
-                    Expense("5 Nov 2024", "Deposito", 150000.0),
-                    Expense("6 Nov 2024", "Investasi Saham", 100000.0)
-                )
-            ),
-            CategoryAdapter.Category(
-                "Sosial",
-                15,
-                23000,
-                Color.parseColor("#9C27B0"),
-                listOf(
-                    Expense("7 Nov 2024", "Donasi", 10000.0),
-                    Expense("8 Nov 2024", "Kegiatan Sosial", 13000.0)
-                )
-            )
+    private fun setupNavigation() {
+        findViewById<ImageView>(R.id.goals_bottom).setOnClickListener {
+            startActivity(Intent(this, GoalsActivity::class.java))
+        }
+        findViewById<ImageView>(R.id.icAchievement).setOnClickListener {
+            startActivity(Intent(this, AchievementActivity::class.java))
+        }
+        findViewById<ImageView>(R.id.ic_home).setOnClickListener {
+            startActivity(Intent(this, HomePageActivity::class.java))
+        }
+        findViewById<ImageView>(R.id.ic_history).setOnClickListener {
+            startActivity(Intent(this, RiwayatActivity::class.java))
+        }
+        findViewById<ImageView>(R.id.ic_profile).setOnClickListener {
+            startActivity(Intent(this, ProfileActivity::class.java))
+        }
+    }
+
+    private fun updateDateDisplay() {
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
+        tvDate.text = monthFormat.format(currentCalendar.time)
+    }
+
+    private fun loadChartData() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        // Ambil awal dan akhir bulan berdasarkan `currentCalendar`
+        val startOfMonth = currentCalendar.clone() as Calendar
+        startOfMonth.set(Calendar.DAY_OF_MONTH, 1)
+
+        val endOfMonth = currentCalendar.clone() as Calendar
+        endOfMonth.set(Calendar.DAY_OF_MONTH, endOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH))
+
+        db.collection("transactions")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("type", "expense") // Ambil hanya pengeluaran
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val filteredTransactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                    .filter { transaction ->
+                        val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
+                        transactionDate != null && transactionDate.after(startOfMonth.time) && transactionDate.before(endOfMonth.time)
+                    }
+
+                updateChartData(filteredTransactions) // Perbarui data grafik
+                updateCategoryList(filteredTransactions) // Perbarui daftar kategori
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateChartData(transactions: List<Transaction>) {
+        val categoryTotals = transactions.groupBy { it.category }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
+
+        val pieEntries = categoryTotals.map { (category, total) -> PieEntry(total.toFloat(), category) }
+        val colors = listOf(
+            Color.parseColor("#4CAF50"), // Hijau
+            Color.parseColor("#FF9800"), // Oranye
+            Color.parseColor("#2196F3"), // Biru
+            Color.parseColor("#9C27B0"), // Ungu
+            Color.parseColor("#FF5722"), // Merah
+            Color.parseColor("#009688")  // Hijau kebiruan
         )
 
-        // Data untuk PieChart
-        val pieEntries = categories.map { PieEntry(it.percentage.toFloat(), it.name) }
-        val colors = categories.map { it.color }
-
-        // Setup DataSet
         val dataSet = PieDataSet(pieEntries, "").apply {
-            this.colors = colors
-            sliceSpace = 3f // Jarak antar potongan
-            selectionShift = 5f // Efek pembesaran saat dipilih
+            this.colors = if (pieEntries.size <= colors.size) colors.subList(0, pieEntries.size) else colors
+            sliceSpace = 3f
+            selectionShift = 5f
         }
 
-        // Setup PieData
         val pieData = PieData(dataSet).apply {
-            setValueFormatter(PercentFormatter(pieChart)) // Tampilkan persentase
+            setValueFormatter(PercentFormatter(pieChart))
             setValueTextSize(12f)
             setValueTextColor(Color.WHITE)
         }
 
-        // Konfigurasi PieChart
         pieChart.apply {
             data = pieData
             setUsePercentValues(true)
-            description.isEnabled = false // Nonaktifkan deskripsi default
+            description.isEnabled = false
             setEntryLabelTextSize(12f)
             setEntryLabelColor(Color.BLACK)
             setDrawHoleEnabled(true)
-            holeRadius = 40f // Ukuran lingkaran tengah
-            transparentCircleRadius = 45f // Pertebal efek pinggir
-            setHoleColor(Color.WHITE) // Warna lingkaran tengah
-            setDrawEntryLabels(true) // Tampilkan label data
-
-            // Teks tengah
+            holeRadius = 40f
+            transparentCircleRadius = 45f
+            setHoleColor(Color.WHITE)
+            setDrawEntryLabels(true)
             centerText = "Pengeluaran"
             setCenterTextSize(12f)
-
-            // Animasi
             animateY(1000)
 
-            // Konfigurasi legenda
             legend.apply {
                 verticalAlignment = Legend.LegendVerticalAlignment.TOP
                 horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
@@ -154,15 +169,31 @@ class DetailGrafikActivity : AppCompatActivity() {
             }
         }
 
-        // Setup RecyclerView dengan adapter
+        pieChart.invalidate() // Refresh chart
+    }
+
+    private fun updateCategoryList(transactions: List<Transaction>) {
+        val categories = transactions.groupBy { it.category }
+            .map { (category, categoryTransactions) ->
+                val totalAmount = categoryTransactions.sumOf { it.amount }
+                val percentage = (totalAmount / transactions.sumOf { it.amount }) * 100
+                val color = when (category) {
+                    "Kebutuhan Pokok" -> Color.parseColor("#4CAF50")
+                    "Entertainment" -> Color.parseColor("#FF9800")
+                    "Tabungan" -> Color.parseColor("#2196F3")
+                    "Sosial" -> Color.parseColor("#9C27B0")
+                    else -> Color.parseColor("#FF5722")
+                }
+                CategoryAdapter.Category(category, percentage.toInt(), totalAmount, color, categoryTransactions.map {
+                    Expense(it.date, it.description, it.amount)
+                })
+            }
+
         adapter = CategoryAdapter(categories) { selectedCategory ->
             val intent = Intent(this, DetailGrafikActivity2::class.java)
-            intent.putExtra("kategori", selectedCategory.name) // Kirim nama kategori
-            intent.putExtra("persentase", selectedCategory.percentage.toFloat()) // Kirim persentase kategori
-            intent.putParcelableArrayListExtra(
-                "pengeluaran",
-                ArrayList(selectedCategory.expenses) // Kirim daftar pengeluaran (jika ada)
-            )
+            intent.putExtra("kategori", selectedCategory.name)
+            intent.putExtra("persentase", selectedCategory.percentage.toFloat())
+            intent.putParcelableArrayListExtra("pengeluaran", ArrayList(selectedCategory.expenses))
             startActivity(intent)
         }
 

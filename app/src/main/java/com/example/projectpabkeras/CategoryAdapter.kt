@@ -16,7 +16,7 @@ class CategoryAdapter(
     data class Category(
         val name: String,
         val percentage: Int,
-        val totalAmount: Int,
+        val totalAmount: Double,
         val color: Int,
         val expenses: List<Expense> = emptyList()
     )
