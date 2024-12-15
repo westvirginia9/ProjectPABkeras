@@ -207,22 +207,6 @@ class RiwayatActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
-
-
-    private fun setupRecyclerViewBulanan(transactions: List<Transaction>) {
-        val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
-        val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
-
-        val summary = WeeklySummary(
-            "${SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(currentCalendar.time)}",
-            totalIncome,
-            totalExpense
-        )
-
-        val adapter = MonthlyAdapter(listOf(summary))
-        recyclerView.adapter = adapter
-    }
-
     private fun groupTransactionsByWeek(transactions: List<Transaction>): List<WeeklySummary> {
         val weeklySummaries = mutableListOf<WeeklySummary>()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -247,6 +231,8 @@ class RiwayatActivity : AppCompatActivity() {
 
         return weeklySummaries
     }
+
+
 
     private fun setTabSelected(selectedTab: TextView, vararg otherTabs: TextView) {
         selectedTab.setBackgroundResource(R.drawable.tab_selected)

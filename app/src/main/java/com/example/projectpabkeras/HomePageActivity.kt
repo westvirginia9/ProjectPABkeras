@@ -24,13 +24,13 @@ import java.util.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-
-
 class HomePageActivity : AppCompatActivity() {
 
     private lateinit var tvDate: TextView
     private lateinit var ivLeft: ImageView
     private lateinit var ivRight: ImageView
+    private lateinit var if_left: ImageView
+    private lateinit var if_right: ImageView
     private lateinit var tvPemasukanNominal: TextView
     private lateinit var tvPengeluaranNominal: TextView
     private lateinit var tvSisaUangNominal: TextView
@@ -51,6 +51,7 @@ class HomePageActivity : AppCompatActivity() {
         tvPengeluaranNominal = findViewById(R.id.tv_pengeluaran_nominal)
         tvSisaUangNominal = findViewById(R.id.tv_sisa_uang_nominal)
         pieChart = findViewById(R.id.pieChart)
+        tvDate = findViewById(R.id.tv_date)
 
         // Ambil userId dari pengguna yang sedang login
         val userId = auth.currentUser?.uid
@@ -77,7 +78,6 @@ class HomePageActivity : AppCompatActivity() {
         loadTransactionSummary()
 
         // Inisialisasi PieChart
-        val pieChart: PieChart = findViewById(R.id.pieChart)
         setupPieChart(pieChart)
         loadPieChartData(pieChart)
 
@@ -135,55 +135,39 @@ class HomePageActivity : AppCompatActivity() {
         tvDate = findViewById(R.id.grafik_date)
         ivLeft = findViewById(R.id.iv_left)
         ivRight = findViewById(R.id.iv_right)
+        if_left = findViewById(R.id.if_left)
+        if_right = findViewById(R.id.if_right)
 
         // Update initial date
         updateDateDisplay()
 
+        if_left.setOnClickListener {
+            moveToPreviousMonth()
+            loadTransactionSummary()
+            loadPieChartData(pieChart)
+        }
+
+        if_right.setOnClickListener {
+            moveToNextMonth()
+            loadTransactionSummary()
+            loadPieChartData(pieChart)
+        }
+
         // Set listeners untuk tombol kiri dan kanan
         ivLeft.setOnClickListener {
             moveToPreviousMonth()
+            loadTransactionSummary()
+            loadPieChartData(pieChart)
         }
 
         ivRight.setOnClickListener {
             moveToNextMonth()
-        }
-
-        // Set listener untuk memilih tanggal
-        tvDate.setOnClickListener {
-            showDatePickerDialog()
+            loadTransactionSummary()
+            loadPieChartData(pieChart)
         }
     }
 
     private fun setupPieChart(pieChart: PieChart) {
-        // Data untuk PieChart
-        val entries = listOf(
-            PieEntry(40f, "Kebutuhan Pokok"),
-            PieEntry(20f, "Entertainment"),
-            PieEntry(25f, "Tabungan"),
-            PieEntry(15f, "Sosial")
-        )
-
-        val categoryColors = listOf(
-            Color.parseColor("#4CAF50"), // Hijau untuk Kebutuhan Pokok
-            Color.parseColor("#FF9800"), // Oranye untuk Entertainment
-            Color.parseColor("#2196F3"), // Biru untuk Tabungan
-            Color.parseColor("#9C27B0")  // Ungu untuk Sosial
-        )
-        val dataSet = PieDataSet(entries, "").apply {
-            colors = categoryColors
-            sliceSpace = 3f
-            selectionShift = 5f
-        }
-
-        val percentFormatter = PercentFormatter(pieChart)
-
-        val data = PieData(dataSet).apply {
-            setValueFormatter(percentFormatter)
-            setValueTextSize(12f)
-            setValueTextColor(Color.WHITE)
-        }
-
-        pieChart.data = data
         pieChart.setUsePercentValues(true)
         pieChart.description.isEnabled = false
         pieChart.setEntryLabelTextSize(12f)
@@ -203,7 +187,6 @@ class HomePageActivity : AppCompatActivity() {
 
         pieChart.centerText = "Pengeluaran"
         pieChart.setCenterTextSize(12f)
-
         pieChart.animateY(1000)
     }
 
@@ -216,9 +199,17 @@ class HomePageActivity : AppCompatActivity() {
             .addOnSuccessListener { snapshot ->
                 val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
 
+                val filteredTransactions = transactions.filter {
+                    val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(it.date)
+                    val transactionCalendar = Calendar.getInstance()
+                    transactionCalendar.time = transactionDate ?: Date()
 
-                val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
-                val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+                    transactionCalendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
+                            transactionCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)
+                }
+
+                val totalIncome = filteredTransactions.filter { it.type == "income" }.sumOf { it.amount }
+                val totalExpense = filteredTransactions.filter { it.type == "expense" }.sumOf { it.amount }
                 val remainingMoney = totalIncome - totalExpense
 
                 tvPemasukanNominal.text = "Rp ${totalIncome.toInt()}"
@@ -238,17 +229,40 @@ class HomePageActivity : AppCompatActivity() {
             .whereEqualTo("type", "expense")
             .get()
             .addOnSuccessListener { snapshot ->
-                val categoryTotals = snapshot.documents.groupBy { it.getString("category") }
+                val filteredTransactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                    .filter { transaction ->
+                        val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
+                        val transactionCalendar = Calendar.getInstance()
+                        transactionCalendar.time = transactionDate ?: Date()
+
+                        transactionCalendar.get(Calendar.MONTH) == currentCalendar.get(Calendar.MONTH) &&
+                                transactionCalendar.get(Calendar.YEAR) == currentCalendar.get(Calendar.YEAR)
+                    }
+
+                val categoryTotals = filteredTransactions.groupBy { it.category }
                     .mapValues { entry ->
-                        entry.value.sumOf { it.getDouble("amount") ?: 0.0 }
+                        entry.value.sumOf { it.amount }
                     }
 
                 val entries = categoryTotals.map { (category, total) ->
                     PieEntry(total.toFloat(), category)
                 }
 
+                val categoryColors = listOf(
+                    Color.parseColor("#4CAF50"), // Hijau untuk Kebutuhan Pokok
+                    Color.parseColor("#FF9800"), // Oranye untuk Entertainment
+                    Color.parseColor("#2196F3"), // Biru untuk Tabungan
+                    Color.parseColor("#9C27B0"), // Ungu untuk Sosial
+                    Color.parseColor("#FF5722"), // Merah untuk lainnya
+                    Color.parseColor("#009688")  // Hijau kebiruan untuk lainnya
+                )
+
                 val dataSet = PieDataSet(entries, "").apply {
-                    colors = ColorTemplate.MATERIAL_COLORS.toList()
+                    colors = if (entries.size <= categoryColors.size) {
+                        categoryColors.subList(0, entries.size)
+                    } else {
+                        categoryColors + ColorTemplate.MATERIAL_COLORS.toList()
+                    }
                     sliceSpace = 3f
                     selectionShift = 5f
                 }
@@ -267,27 +281,29 @@ class HomePageActivity : AppCompatActivity() {
             }
     }
 
+
     private fun moveToPreviousMonth() {
-        currentCalendar.add(Calendar.MONTH, -1) // Pindah ke bulan sebelumnya
+        currentCalendar.add(Calendar.MONTH, -1)
         updateDateDisplay()
     }
 
     private fun moveToNextMonth() {
-        currentCalendar.add(Calendar.MONTH, 1) // Pindah ke bulan berikutnya
+        currentCalendar.add(Calendar.MONTH, 1)
         updateDateDisplay()
     }
 
     private fun updateDateDisplay() {
-        val monthFormat = SimpleDateFormat("MMM - yyyy", Locale.getDefault())
+        val monthFormat = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
         tvDate.text = monthFormat.format(currentCalendar.time)
     }
 
     private fun showDatePickerDialog() {
         val datePickerDialog = DatePickerDialog(this,
-            { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-                // Set bulan dan tahun yang dipilih ke dalam tampilan
+            { _: DatePicker, year: Int, month: Int, _: Int ->
                 currentCalendar.set(year, month, 1)
                 updateDateDisplay()
+                loadTransactionSummary()
+                loadPieChartData(pieChart)
             },
             currentCalendar.get(Calendar.YEAR),
             currentCalendar.get(Calendar.MONTH),
@@ -302,5 +318,3 @@ class HomePageActivity : AppCompatActivity() {
         datePickerDialog.show()
     }
 }
-
-
