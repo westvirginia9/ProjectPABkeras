@@ -578,9 +578,10 @@
                                         android:textStyle="bold" />
                                     <!-- Progress kategori -->
                                     <TextView
+                                        android:id="@+id/tv_progress_kebutuhan"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="10.000/200.000"
+                                        android:text="0/0"
                                         android:textColor="@color/red"
                                         android:textSize="12sp"
                                         android:textStyle="bold" />
@@ -637,9 +638,10 @@
                                         android:layout_marginBottom="4dp" />
                                     <!-- Progress kategori -->
                                     <TextView
+                                        android:id="@+id/tv_progress_hiburan"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="10.000/200.000"
+                                        android:text="0/0"
                                         android:textSize="12sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/red" />
@@ -696,9 +698,10 @@
                                         android:layout_marginBottom="4dp" />
                                     <!-- Progress kategori -->
                                     <TextView
+                                        android:id="@+id/tv_progress_tabungan"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="10.000/200.000"
+                                        android:text="0/0"
                                         android:textSize="12sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/red" />
@@ -755,9 +758,10 @@
                                         android:layout_marginBottom="4dp" />
                                     <!-- Progress kategori -->
                                     <TextView
+                                        android:id="@+id/tv_progress_sosial"
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="10.000/200.000"
+                                        android:text="0/0"
                                         android:textSize="12sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/red" />

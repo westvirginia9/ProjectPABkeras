@@ -24,6 +24,12 @@ import java.util.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+private val categoryLimits = mapOf(
+    "Tabungan" to 200000.0,
+    "Social" to 200000.0,
+    "Hiburan" to 150000.0
+)
+
 class HomePageActivity : AppCompatActivity() {
 
     private lateinit var tvDate: TextView
@@ -36,6 +42,10 @@ class HomePageActivity : AppCompatActivity() {
     private lateinit var tvSisaUangNominal: TextView
     private var currentCalendar: Calendar = Calendar.getInstance()
     private lateinit var pieChart: PieChart
+    private lateinit var tvProgressKebutuhan: TextView
+    private lateinit var tvProgressHiburan: TextView
+    private lateinit var tvProgressTabungan: TextView
+    private lateinit var tvProgressSosial: TextView
 
     private lateinit var auth: FirebaseAuth
     private val firestore = FirebaseFirestore.getInstance()
@@ -52,6 +62,13 @@ class HomePageActivity : AppCompatActivity() {
         tvSisaUangNominal = findViewById(R.id.tv_sisa_uang_nominal)
         pieChart = findViewById(R.id.pieChart)
         tvDate = findViewById(R.id.tv_date)
+        // Inisialisasi TextView
+        tvProgressKebutuhan = findViewById(R.id.tv_progress_kebutuhan)
+        tvProgressHiburan = findViewById(R.id.tv_progress_hiburan)
+        tvProgressTabungan = findViewById(R.id.tv_progress_tabungan)
+        tvProgressSosial = findViewById(R.id.tv_progress_sosial)
+
+        loadCategoryProgress()
 
         // Ambil userId dari pengguna yang sedang login
         val userId = auth.currentUser?.uid
@@ -167,6 +184,49 @@ class HomePageActivity : AppCompatActivity() {
         }
     }
 
+    private fun loadCategoryProgress() {
+        val userId = auth.currentUser?.uid ?: return
+
+        // Ambil data limit kategori
+        firestore.collection("kategori").document(userId).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val limitKebutuhan = document.getLong("kebutuhan") ?: 0
+                    val limitHiburan = document.getLong("hiburan") ?: 0
+                    val limitTabungan = document.getLong("tabungan") ?: 0
+                    val limitSosial = document.getLong("sosial") ?: 0
+
+                    // Hitung pengeluaran berdasarkan kategori
+                    firestore.collection("transactions")
+                        .whereEqualTo("userId", userId)
+                        .whereEqualTo("type", "expense")
+                        .get()
+                        .addOnSuccessListener { snapshot ->
+                            val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+
+                            val totalKebutuhan = transactions.filter { it.category == "Kebutuhan Pokok" }.sumOf { it.amount }
+                            val totalHiburan = transactions.filter { it.category == "Hiburan" }.sumOf { it.amount }
+                            val totalTabungan = transactions.filter { it.category == "Tabungan" }.sumOf { it.amount }
+                            val totalSosial = transactions.filter { it.category == "Sosial" }.sumOf { it.amount }
+
+                            // Tampilkan progres kategori
+                            tvProgressKebutuhan.text = "${totalKebutuhan}/$limitKebutuhan"
+                            tvProgressHiburan.text = "${totalHiburan}/$limitHiburan"
+                            tvProgressTabungan.text = "${totalTabungan}/$limitTabungan"
+                            tvProgressSosial.text = "${totalSosial}/$limitSosial"
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Gagal menghitung pengeluaran: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    Toast.makeText(this, "Data limit belum tersedia", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat limit: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
     private fun setupPieChart(pieChart: PieChart) {
         pieChart.setUsePercentValues(true)
         pieChart.description.isEnabled = false
@@ -190,6 +250,7 @@ class HomePageActivity : AppCompatActivity() {
         pieChart.animateY(1000)
     }
 
+    // Perbarui fungsi loadTransactionSummary untuk menghitung kategori
     private fun loadTransactionSummary() {
         val userId = auth.currentUser?.uid ?: return
 
@@ -215,11 +276,96 @@ class HomePageActivity : AppCompatActivity() {
                 tvPemasukanNominal.text = "Rp ${totalIncome.toInt()}"
                 tvPengeluaranNominal.text = "Rp ${totalExpense.toInt()}"
                 tvSisaUangNominal.text = "Rp ${remainingMoney.toInt()}"
+
+                // Tambahkan pengecekan batas kategori
+                checkCategoryLimits(filteredTransactions)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun checkCategoryLimits(transactions: List<Transaction>) {
+        val categoryTotals = transactions.filter { it.type == "expense" }
+            .groupBy { it.category }
+            .mapValues { entry -> entry.value.sumOf { it.amount } }
+
+        // Periksa apakah ada kategori yang melebihi batas
+        categoryTotals.forEach { (category, total) ->
+            val limit = categoryLimits[category]
+            if (limit != null && total > limit) {
+                showCategoryLimitExceededDialog(category, limit, total)
+            }
+        }
+    }
+
+    private fun showCategoryLimitExceededDialog(category: String, limit: Double, total: Double) {
+        val message = """
+        Pengeluaran untuk kategori "$category" telah melebihi batas!
+        Batas: Rp ${limit.toInt()}
+        Total Pengeluaran: Rp ${total.toInt()}
+    """.trimIndent()
+
+        // Tampilkan alert dialog
+        val builder = android.app.AlertDialog.Builder(this)
+        builder.setTitle("Batas Kategori Tercapai")
+            .setMessage(message)
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    private fun updateCategoryLimits() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val currentMonthYear = getCurrentMonthYear() // Ambil bulan-tahun sekarang
+
+        // Ambil semua pemasukan bulan ini dari Firestore
+        FirebaseFirestore.getInstance().collection("transactions")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("type", "income")
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val totalIncome = snapshot.documents
+                    .mapNotNull { it.getLong("amount") } // Ambil jumlah pemasukan
+                    .sum()
+
+                // Hitung limit berdasarkan persentase
+                val kebutuhanLimit = (45 * totalIncome) / 100
+                val entertainmentLimit = (25 * totalIncome) / 100
+                val tabunganLimit = (20 * totalIncome) / 100
+                val sosialLimit = (10 * totalIncome) / 100
+
+                // Simpan limit ke koleksi 'kategori' di Firestore
+                val limitsData = hashMapOf(
+                    "kebutuhan" to kebutuhanLimit,
+                    "entertainment" to entertainmentLimit,
+                    "tabungan" to tabunganLimit,
+                    "sosial" to sosialLimit,
+                    "updatedMonth" to currentMonthYear // Tanda bulan pembaruan
+                )
+
+                // Tambahkan atau perbarui dokumen limits
+                FirebaseFirestore.getInstance()
+                    .collection("kategori")
+                    .document(userId) // Dokumen limit untuk user ini
+                    .set(limitsData)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Limit kategori berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Gagal memperbarui limit: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menghitung pemasukan: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun getCurrentMonthYear(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        return dateFormat.format(Date())
+    }
+
+
 
     private fun loadPieChartData(pieChart: PieChart) {
         val userId = auth.currentUser?.uid ?: return
