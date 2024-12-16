@@ -3,6 +3,7 @@ package com.example.projectpabkeras
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -93,35 +94,39 @@ class DetailGrafikActivity : AppCompatActivity() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
 
-        // Ambil awal dan akhir bulan berdasarkan `currentCalendar`
-        val startOfMonth = currentCalendar.clone() as Calendar
-        startOfMonth.set(Calendar.DAY_OF_MONTH, 1)
-
-        val endOfMonth = currentCalendar.clone() as Calendar
-        endOfMonth.set(Calendar.DAY_OF_MONTH, endOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH))
+        val currentMonthYear = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
 
         db.collection("transactions")
             .whereEqualTo("userId", userId)
-            .whereEqualTo("type", "expense") // Ambil hanya pengeluaran
+            .whereEqualTo("type", "expense")
             .get()
             .addOnSuccessListener { snapshot ->
-                val filteredTransactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
-                    .filter { transaction ->
-                        val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
-                        transactionDate != null && transactionDate.after(startOfMonth.time) && transactionDate.before(endOfMonth.time)
-                    }
+                val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                val filteredTransactions = transactions.filter { it.date.startsWith(currentMonthYear) }
 
-                updateChartData(filteredTransactions) // Perbarui data grafik
-                updateCategoryList(filteredTransactions) // Perbarui daftar kategori
+                // Jika tidak ada data untuk bulan ini
+                if (filteredTransactions.isEmpty()) {
+                    Toast.makeText(this, "Tidak ada data pengeluaran untuk bulan ini", Toast.LENGTH_SHORT).show()
+                    pieChart.clear() // Bersihkan PieChart
+                    updateCategoryList(emptyList()) // Kosongkan RecyclerView
+                    return@addOnSuccessListener
+                }
+
+                updateChartData(filteredTransactions)
+                updateCategoryList(filteredTransactions)
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
+
+
+
     private fun updateChartData(transactions: List<Transaction>) {
         val categoryTotals = transactions.groupBy { it.category }
             .mapValues { entry -> entry.value.sumOf { it.amount } }
+        println("Category Totals: $categoryTotals")
 
         val pieEntries = categoryTotals.map { (category, total) -> PieEntry(total.toFloat(), category) }
         val colors = listOf(
@@ -173,6 +178,12 @@ class DetailGrafikActivity : AppCompatActivity() {
     }
 
     private fun updateCategoryList(transactions: List<Transaction>) {
+        if (transactions.isEmpty()) {
+            // Kosongkan RecyclerView jika tidak ada data
+            recyclerView.adapter = null
+            return
+        }
+
         val categories = transactions.groupBy { it.category }
             .map { (category, categoryTransactions) ->
                 val totalAmount = categoryTransactions.sumOf { it.amount }
@@ -184,20 +195,28 @@ class DetailGrafikActivity : AppCompatActivity() {
                     "Sosial" -> Color.parseColor("#9C27B0")
                     else -> Color.parseColor("#FF5722")
                 }
-                CategoryAdapter.Category(category, percentage.toInt(), totalAmount, color, categoryTransactions.map {
-                    Expense(it.date, it.description, it.amount)
-                })
+                CategoryAdapter.Category(
+                    category,
+                    percentage.toInt(),
+                    totalAmount,
+                    color,
+                    categoryTransactions.map {
+                        Expense(it.date, it.description, it.amount)
+                    }
+                )
             }
 
         adapter = CategoryAdapter(categories) { selectedCategory ->
-            val intent = Intent(this, DetailGrafikActivity2::class.java)
-            intent.putExtra("kategori", selectedCategory.name)
-            intent.putExtra("persentase", selectedCategory.percentage.toFloat())
-            intent.putParcelableArrayListExtra("pengeluaran", ArrayList(selectedCategory.expenses))
+            val intent = Intent(this, DetailGrafikActivity2::class.java).apply {
+                putExtra("kategori", selectedCategory.name)
+                putExtra("persentase", selectedCategory.percentage.toFloat())
+                putParcelableArrayListExtra("pengeluaran", ArrayList(selectedCategory.expenses))
+            }
             startActivity(intent)
         }
 
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
     }
+
 }
