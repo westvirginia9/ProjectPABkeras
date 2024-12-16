@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.projectpabkeras.models.Transaction
 import com.github.mikephil.charting.charts.PieChart
@@ -214,6 +215,12 @@ class HomePageActivity : AppCompatActivity() {
                             tvProgressHiburan.text = "${totalHiburan}/$limitHiburan"
                             tvProgressTabungan.text = "${totalTabungan}/$limitTabungan"
                             tvProgressSosial.text = "${totalSosial}/$limitSosial"
+
+                            // Cek jika pengeluaran melebihi limit
+                            checkLimitExceeded("Kebutuhan Pokok", totalKebutuhan.toLong(), limitKebutuhan)
+                            checkLimitExceeded("Hiburan", totalHiburan.toLong(), limitHiburan)
+                            checkLimitExceeded("Tabungan", totalTabungan.toLong(), limitTabungan)
+                            checkLimitExceeded("Sosial", totalSosial.toLong(), limitSosial)
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(this, "Gagal menghitung pengeluaran: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -226,6 +233,18 @@ class HomePageActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal memuat limit: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun checkLimitExceeded(category: String, total: Long, limit: Long) {
+        if (total > limit) {
+            // Tampilkan AlertDialog
+            AlertDialog.Builder(this)
+                .setTitle("Peringatan Limit!")
+                .setMessage("Pengeluaran untuk kategori \"$category\" telah melebihi limit! Total: $total, Limit: $limit.")
+                .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+                .show()
+        }
+    }
+
 
     private fun setupPieChart(pieChart: PieChart) {
         pieChart.setUsePercentValues(true)
