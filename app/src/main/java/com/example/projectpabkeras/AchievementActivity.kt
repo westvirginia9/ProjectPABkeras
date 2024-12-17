@@ -19,6 +19,7 @@ class AchievementActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_achievement)
 
+
         // Tombol Navigasi
         val btnBack = findViewById<ImageView>(R.id.btn_back)
         btnBack.setOnClickListener { onBackPressed() }
