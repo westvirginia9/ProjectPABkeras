@@ -14,6 +14,7 @@ class AchievementActivity : AppCompatActivity() {
     private lateinit var achievementAdapter: AchievementAdapter
     private val achievements = mutableListOf<AchievementItem>() // Data pencapaian
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_achievement)
