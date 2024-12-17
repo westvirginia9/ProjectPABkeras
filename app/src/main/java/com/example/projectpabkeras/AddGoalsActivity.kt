@@ -8,12 +8,28 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.projectpabkeras.models.Goal
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
+
+data class Goal(
+    val goalId: String = "",
+    val goalName: String = "",
+    val goalPeriod: String = "",
+    val goalDescription: String = "",
+    val goalTargetAmount: Int = 0,
+    val currentAmount: Int = 0
+)
 
 class AddGoalsActivity : AppCompatActivity() {
 
     private lateinit var startDate: String
     private lateinit var endDate: String
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    private val auth = FirebaseAuth.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +42,28 @@ class AddGoalsActivity : AppCompatActivity() {
         val targetAmountEditText = findViewById<EditText>(R.id.et_goal_target_amount)
         val saveButton = findViewById<Button>(R.id.btn_save_goal)
         val btnBack = findViewById<ImageView>(R.id.btn_back)
+
+//        val db = FirebaseFirestore.getInstance()
+//        val goalId = UUID.randomUUID().toString()
+
+//        data class Goal(
+//            val goalId: String = "",
+//            val goalName: String = "",
+//            val goalPeriod: String = "",
+//            val goalDescription: String = "",
+//            val goalTargetAmount: Int = 0,
+//            val currentAmount: Int = 0
+//        )
+
+//        db.collection("goals").document(goalId).set(Goal)
+//            .addOnSuccessListener {
+//                Toast.makeText(this, "Goal berhasil ditambahkan!", Toast.LENGTH_SHORT).show()
+//                startActivity(Intent(this, GoalsActivity::class.java))
+//                finish()
+//            }
+//            .addOnFailureListener {
+//                Toast.makeText(this, "Gagal menambahkan goal", Toast.LENGTH_SHORT).show()
+//            }
 
         // Back Button Logic
         btnBack.setOnClickListener { onBackPressed() }
@@ -60,14 +98,13 @@ class AddGoalsActivity : AppCompatActivity() {
             val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
         }
-        // Show DatePickerDialog when clicking on periodEditText
+        // Date Picker for Period
         periodEditText.setOnClickListener {
             val calendar = Calendar.getInstance()
             DatePickerDialog(
                 this,
                 { _, year, month, dayOfMonth ->
                     startDate = "$dayOfMonth/${month + 1}/$year"
-                    // Show end date picker after selecting start date
                     showEndDatePicker(periodEditText)
                 },
                 calendar.get(Calendar.YEAR),
@@ -78,29 +115,42 @@ class AddGoalsActivity : AppCompatActivity() {
 
         // Save Button Logic
         saveButton.setOnClickListener {
-            // Get input values
-            val goalName = nameEditText.text.toString()
-            val description = descriptionEditText.text.toString()
-            val targetAmount = targetAmountEditText.text.toString().toIntOrNull()
+            val goalName = nameEditText.text.toString().trim()
+            val goalDescription = descriptionEditText.text.toString().trim()
+            val goalTargetAmount = targetAmountEditText.text.toString().toIntOrNull()
 
-            // Validate input
-            if (goalName.isNotEmpty() && ::startDate.isInitialized && ::endDate.isInitialized && targetAmount != null) {
-                val period = "$startDate - $endDate"
-
-                // Pass data to GoalsActivity
-                val intent = Intent(this, GoalsActivity::class.java).apply {
-                    putExtra("GOAL_NAME", goalName)
-                    putExtra("GOAL_PERIOD", period)
-                    putExtra("GOAL_DESCRIPTION", description)
-                    putExtra("GOAL_TARGET_AMOUNT", targetAmount)
-                }
-                startActivity(intent)
-                finish()
+            if (goalName.isNotEmpty() && ::startDate.isInitialized && ::endDate.isInitialized && goalTargetAmount != null) {
+                val goalPeriod = "$startDate - $endDate"
+                saveGoalToFirestore(goalName, goalDescription, goalPeriod, goalTargetAmount)
             } else {
-                // Show error if validation fails
                 Toast.makeText(this, "Isi semua kolom dengan benar!", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun saveGoalToFirestore(goalName: String, goalDescription: String, goalPeriod: String, goalTargetAmount: Int) {
+        val goalId = firestore.collection("goals").document().id // Auto-generate document ID
+        val newGoal = Goal(
+            goalId = goalId,
+            goalName = goalName,
+            goalDescription = goalDescription,
+            goalPeriod = goalPeriod,
+            goalTargetAmount = goalTargetAmount,
+            currentAmount = 0, // Default value
+            userId = userId
+        )
+
+        // Save the new goal to Firestore
+        firestore.collection("goals").document(goalId)
+            .set(newGoal)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Goal berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this, GoalsActivity::class.java))
+                finish()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menyimpan: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun showEndDatePicker(periodEditText: EditText) {
@@ -109,7 +159,6 @@ class AddGoalsActivity : AppCompatActivity() {
             this,
             { _, year, month, dayOfMonth ->
                 endDate = "$dayOfMonth/${month + 1}/$year"
-                // Update the EditText with the selected period
                 periodEditText.setText("$startDate - $endDate")
             },
             calendar.get(Calendar.YEAR),
@@ -117,4 +166,5 @@ class AddGoalsActivity : AppCompatActivity() {
             calendar.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
+
 }

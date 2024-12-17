@@ -1,148 +1,141 @@
 package com.example.projectpabkeras
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.view.LayoutInflater
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import android.widget.Toast
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class GoalsActivity : AppCompatActivity() {
 
-    private lateinit var goalName: String
-    private var goalTargetAmount: Int = 0
-    private lateinit var goalPeriod: String
-    private lateinit var goalDescription: String
+    private val db = FirebaseFirestore.getInstance()
+    private val userId = FirebaseAuth.getInstance().currentUser?.uid
+    private lateinit var goalContainer: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_goals)
 
-        // Tombol Update
-        val updateButton = findViewById<Button>(R.id.btn_update_goal)
-        updateButton.setOnClickListener {
-            val intent = Intent(this, UpdateGoalsActivity::class.java).apply {
-                putExtra("GOAL_NAME", "Beli Laptop Baru")
-                putExtra("GOAL_TARGET_AMOUNT", 15000000)
-            }
-            startActivity(intent)
-        }
+        goalContainer = findViewById(R.id.goalContainer)
 
-        // Tombol FAB (+)
+        // Tombol Tambah Goal
         val fabButton = findViewById<ImageButton>(R.id.btn_fabgoals)
         fabButton.setOnClickListener {
-            val intent = Intent(this, AddGoalsActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, AddGoalsActivity::class.java))
         }
 
-        val editButton = findViewById<Button>(R.id.btn_edit_goal)
-        editButton.setOnClickListener {
-            val intent = Intent(this, EditGoalsActivity::class.java)
-            intent.putExtra("GOAL_NAME", goalName)
-            intent.putExtra("GOAL_PERIOD", goalPeriod)
-            intent.putExtra("GOAL_DESCRIPTION", goalDescription)
-            intent.putExtra("GOAL_TARGET_AMOUNT", goalTargetAmount)
-            startActivity(intent)
-        }
-        val btnBack = findViewById<ImageView>(R.id.btn_back)
-        btnBack.setOnClickListener { onBackPressed() }
+        // Navigasi
+        setupNavigation()
 
-        // Tombol Goals
-        val goalsButton: ImageView = findViewById(R.id.goals_bottom)
-        goalsButton.setOnClickListener {
-            val intent = Intent(this, GoalsActivity::class.java)
-            startActivity(intent)
-        }
+        // Muat data goals dari Firestore
+        loadGoals()
+    }
 
-        // Tombol Achievement
-        val achievementButton: ImageView = findViewById(R.id.icAchievement)
-        achievementButton.setOnClickListener {
-            val intent = Intent(this, AchievementActivity::class.java)
-            startActivity(intent)
+    private fun setupNavigation() {
+        findViewById<ImageView>(R.id.ic_home).setOnClickListener {
+            startActivity(Intent(this, HomePageActivity::class.java))
         }
+        findViewById<ImageView>(R.id.icAchievement).setOnClickListener {
+            startActivity(Intent(this, AchievementActivity::class.java))
+        }
+        findViewById<ImageView>(R.id.ic_history).setOnClickListener {
+            startActivity(Intent(this, RiwayatActivity::class.java))
+        }
+        findViewById<ImageView>(R.id.ic_profile).setOnClickListener {
+            startActivity(Intent(this, ProfileActivity::class.java))
+        }
+    }
 
-        // Tombol Achievement
-        val homeButton: ImageView = findViewById(R.id.ic_home)
-        homeButton.setOnClickListener {
-            val intent = Intent(this, HomePageActivity::class.java)
-            startActivity(intent)
-        }
-        val icRiwayat: ImageView = findViewById(R.id.ic_history)
-        icRiwayat.setOnClickListener {
-            val intent = Intent(this, RiwayatActivity::class.java)
-            startActivity(intent)
-        }
-        val profileButton: ImageView = findViewById(R.id.ic_profile)
-        profileButton.setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
-        }
+    private fun loadGoals() {
+        goalContainer.removeAllViews()
+        if (userId == null) return
 
-        // Dummy data untuk contoh
-        goalName = "Beli Laptop Baru"
-        goalPeriod = "21/11/2024 s/d 21/01/2025"
-        goalDescription = "Semoga bisa tercapai, aamiin"
-        goalTargetAmount = 15000000
+        db.collection("goals")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    val goalName = document.getString("goalName") ?: ""
+                    val goalPeriod = document.getString("goalPeriod") ?: ""
+                    val goalDescription = document.getString("goalDescription") ?: ""
+                    val goalTargetAmount = document.getLong("goalTargetAmount")?.toInt() ?: 0
+                    val currentAmount = document.getLong("currentAmount")?.toInt() ?: 0
+                    val goalId = document.getString("goalId") ?: ""
 
-        // Tambahkan data ke UI
-        val goalContainer = findViewById<LinearLayout>(R.id.goalContainer)
-        addGoalCard(goalContainer, goalName, goalPeriod, goalDescription, goalTargetAmount)
+                    addGoalCard(goalName, goalPeriod, goalDescription, goalTargetAmount, currentAmount, goalId)
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal memuat data goals", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun addGoalCard(
-        container: LinearLayout,
         title: String,
         period: String,
         description: String,
-        targetAmount: Int
+        targetAmount: Int,
+        currentAmount: Int,
+        goalId: String
     ) {
-        // Buat layout kartu tujuan
-        val goalCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(16, 16, 16, 16)
-            setBackgroundResource(R.drawable.bg_card)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                setMargins(0, 0, 0, 16)
+        val progress = (currentAmount.toFloat() / targetAmount * 100).toInt()
+
+        val cardLayout = LayoutInflater.from(this).inflate(R.layout.item_goal_card, null)
+        val tvTitle = cardLayout.findViewById<TextView>(R.id.tvGoalTitle)
+        val tvPeriod = cardLayout.findViewById<TextView>(R.id.tvDateRange)
+        val progressBar = cardLayout.findViewById<ProgressBar>(R.id.progressBar)
+        val tvProgress = cardLayout.findViewById<TextView>(R.id.tvProgress)
+        val btnUpdate = cardLayout.findViewById<Button>(R.id.btn_update_goal)
+
+        tvTitle.text = title
+        tvPeriod.text = period
+        tvProgress.text = "Rp $currentAmount / Rp $targetAmount ($progress%)"
+        progressBar.max = 100
+        progressBar.progress = progress
+
+        btnUpdate.setOnClickListener {
+            showUpdateDialog(goalId, currentAmount, targetAmount)
+        }
+
+        goalContainer.addView(cardLayout)
+    }
+
+    private fun showUpdateDialog(goalId: String, currentAmount: Int, targetAmount: Int) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_update_goal, null)
+        val etAmount = dialogView.findViewById<EditText>(R.id.et_amount)
+
+        AlertDialog.Builder(this)
+            .setTitle("Update Goal")
+            .setView(dialogView)
+            .setPositiveButton("Simpan") { _, _ ->
+                val inputAmount = etAmount.text.toString().toIntOrNull()
+                if (inputAmount != null && inputAmount > 0) {
+                    val newAmount = currentAmount + inputAmount
+                    if (newAmount <= targetAmount) {
+                        updateGoalAmount(goalId, newAmount)
+                    } else {
+                        Toast.makeText(this, "Jumlah melebihi target!", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this, "Input tidak valid", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+            .setNegativeButton("Batal", null)
+            .show()
+    }
 
-        // Tambahkan komponen
-        val titleView = TextView(this).apply {
-            text = title
-            textSize = 16f
-            setTextColor(getColor(R.color.black))
-            setTypeface(null, android.graphics.Typeface.BOLD)
-        }
-        goalCard.addView(titleView)
-
-        val periodView = TextView(this).apply {
-            text = period
-            textSize = 12f
-            setTextColor(getColor(R.color.red))
-        }
-        goalCard.addView(periodView)
-
-        val progressTextView = TextView(this).apply {
-            text = "Rp 1.500.000 / Rp $targetAmount (10%)"
-            textSize = 12f
-            setTextColor(getColor(R.color.black))
-        }
-        goalCard.addView(progressTextView)
-
-        val descriptionView = TextView(this).apply {
-            text = description
-            textSize = 12f
-            setTextColor(getColor(R.color.gray))
-        }
-        goalCard.addView(descriptionView)
-
-        // Tambahkan ke container
-        container.addView(goalCard)
+    private fun updateGoalAmount(goalId: String, newAmount: Int) {
+        db.collection("goals").document(goalId)
+            .update("currentAmount", newAmount)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Goal berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                loadGoals()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal memperbarui goal", Toast.LENGTH_SHORT).show()
+            }
     }
 }
