@@ -191,11 +191,8 @@ class InputActivity : AppCompatActivity() {
                                     currentLevel
                                 }
 
-                                val newProgress = if (currentProgress >= targetAmount) {
-                                    currentProgress - targetAmount
-                                } else {
-                                    currentProgress
-                                }
+                                // Progress tetap akumulatif
+                                val newProgress = currentProgress
 
                                 val newTargetAmount = if (newLevel > currentLevel) {
                                     targetAmount + 2000000
@@ -287,36 +284,49 @@ class InputActivity : AppCompatActivity() {
                             val currentLevel = (achievementData["currentLevel"] as Long).toInt()
                             val maxLevel = (achievementData["maxLevel"] as Long).toInt()
 
-                            val newLevel = if (currentProgress >= targetAmount && currentLevel < maxLevel) {
-                                currentLevel + 1
-                            } else {
-                                currentLevel
+                            var newLevel = currentLevel
+                            var newTargetAmount = targetAmount
+
+                            // Naikkan level jika currentProgress melebihi targetAmount
+                            var remainingProgress = currentProgress
+                            while (remainingProgress >= newTargetAmount && newLevel < maxLevel) {
+                                remainingProgress -= newTargetAmount
+                                newLevel++
+                                newTargetAmount += 2000000 // Contoh: target baru +2 juta
                             }
 
-                            // Jika level naik, tambahkan EXP
-                            if (newLevel > currentLevel) {
-                                val expGained = when (newLevel) {
-                                    1 -> 100
-                                    2 -> 200
-                                    3 -> 300
-                                    else -> 0
-                                }
+                            // Hitung EXP jika level naik
+                            val expGained = if (newLevel > currentLevel) {
+                                (newLevel - currentLevel) * 100 // Tambah 100 EXP per level
+                            } else {
+                                0
+                            }
+
+                            // Jika level naik, tambahkan EXP ke user
+                            if (expGained > 0) {
                                 updateUserExp(userId, expGained)
                             }
 
                             // Kembalikan data achievement yang diperbarui
                             mapOf(
-                                "title" to achievementData["title"],
+                                "title" to "Total keseluruhan pemasukan mencapai ${newTargetAmount} IDR",
                                 "currentLevel" to newLevel,
                                 "maxLevel" to maxLevel,
-                                "targetAmount" to targetAmount,
-                                "currentProgress" to currentProgress
+                                "exp" to (achievementData["exp"] as Long).toInt() + expGained,
+                                "targetAmount" to newTargetAmount,
+                                "currentProgress" to remainingProgress // Progres tetap dihitung dari sisa
                             )
                         }
 
-                        // Perbarui ke Firestore
+                        // Simpan ke Firestore
                         db.collection("achievements").document(userId)
                             .update("achievements", updatedAchievements)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Pencapaian diperbarui!", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Gagal memperbarui pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
                     }
                 }
             }
@@ -324,6 +334,10 @@ class InputActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal memuat pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+
+
+
 
 
     private fun updateUserExp(userId: String, expGained: Int) {

@@ -1,6 +1,8 @@
 package com.example.projectpabkeras
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +39,35 @@ class ProfileActivity : AppCompatActivity() {
         loadUserProfile()
 
         loadUserExp()
+
+        findViewById<ImageView>(R.id.btn_back).setOnClickListener { onBackPressed() }
+
+
+        // Tombol Goals
+        val goalsButton: ImageView = findViewById(R.id.goals_bottom)
+        goalsButton.setOnClickListener {
+            val intent = Intent(this, GoalsActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Tombol Achievement
+        val achievementButton: ImageView = findViewById(R.id.icAchievement)
+        achievementButton.setOnClickListener {
+            val intent = Intent(this, AchievementActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Tombol Achievement
+        val homeButton: ImageView = findViewById(R.id.ic_home)
+        homeButton.setOnClickListener {
+            val intent = Intent(this, HomePageActivity::class.java)
+            startActivity(intent)
+        }
+        val icRiwayat: ImageView = findViewById(R.id.ic_history)
+        icRiwayat.setOnClickListener {
+            val intent = Intent(this, RiwayatActivity::class.java)
+            startActivity(intent)
+        }
     }
 
     private fun loadAchievementsFromFirestore() {

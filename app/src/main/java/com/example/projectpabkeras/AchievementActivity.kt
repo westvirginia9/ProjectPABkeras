@@ -31,6 +31,7 @@ class AchievementActivity : AppCompatActivity() {
 
 
 
+        findViewById<ImageView>(R.id.btn_back).setOnClickListener { onBackPressed() }
 
 
         // Tombol Goals
