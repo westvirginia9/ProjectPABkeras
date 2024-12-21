@@ -63,7 +63,7 @@ class GoalsActivity : AppCompatActivity() {
                     val goalDescription = document.getString("goalDescription") ?: ""
                     val goalTargetAmount = document.getLong("goalTargetAmount")?.toInt() ?: 0
                     val currentAmount = document.getLong("currentAmount")?.toInt() ?: 0
-                    val goalId = document.getString("goalId") ?: ""
+                    val goalId = document.id
 
                     addGoalCard(goalName, goalPeriod, goalDescription, goalTargetAmount, currentAmount, goalId)
                 }
@@ -132,10 +132,125 @@ class GoalsActivity : AppCompatActivity() {
             .update("currentAmount", newAmount)
             .addOnSuccessListener {
                 Toast.makeText(this, "Goal berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                checkGoalCompletion(goalId, newAmount)
                 loadGoals()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Gagal memperbarui goal", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun checkGoalCompletion(goalId: String, currentAmount: Int) {
+        db.collection("goals").document(goalId)
+            .get()
+            .addOnSuccessListener { document ->
+                val targetAmount = document.getLong("goalTargetAmount")?.toInt() ?: return@addOnSuccessListener
+                if (currentAmount >= targetAmount) {
+                    showGoalCompletedDialog()
+//                    updateMilestoneAchievement()
+                    onGoalCompleted()
+                }
+            }
+    }
+
+    private fun onGoalCompleted() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        // Update pencapaian milestone
+        updateMilestoneAchievement(userId)
+    }
+
+    private fun showGoalCompletedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Goal Selesai!")
+            .setMessage("Selamat! Anda telah menyelesaikan goal ini.")
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    private fun updateMilestoneAchievement(userId: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("achievements").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val achievementsArray = document.get("achievements") as? List<Map<String, Any>>
+                    if (achievementsArray != null) {
+                        val updatedAchievements = achievementsArray.map { achievementData ->
+                            if ((achievementData["title"] as String).contains("milestone", ignoreCase = true)) {
+                                val currentLevel = (achievementData["currentLevel"] as Long).toInt()
+                                val maxLevel = (achievementData["maxLevel"] as Long).toInt()
+                                val exp = (achievementData["exp"] as Long).toInt()
+                                var milestonesCompleted = (achievementData["currentProgress"] as Long).toInt()
+
+                                // Tambahkan milestone yang selesai
+                                milestonesCompleted += 1
+
+                                // Periksa apakah level naik
+                                if (milestonesCompleted >= requiredMilestones(currentLevel + 1) && currentLevel < maxLevel) {
+                                    val newLevel = currentLevel + 1
+                                    milestonesCompleted = 0 // Reset progress
+
+                                    return@map mapOf(
+                                        "title" to newMilestoneTitle(newLevel),
+                                        "currentLevel" to newLevel,
+                                        "maxLevel" to maxLevel,
+                                        "exp" to newExpForLevel(newLevel),
+                                        "currentProgress" to milestonesCompleted
+                                    )
+                                }
+                            }
+                            return@map achievementData
+                        }
+
+                        // Simpan kembali ke Firestore
+                        db.collection("achievements").document(userId)
+                            .update("achievements", updatedAchievements)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Pencapaian milestone diperbarui!", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Gagal memperbarui milestone: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // Fungsi untuk mendapatkan judul milestone baru
+    private fun newMilestoneTitle(level: Int): String {
+        return when (level) {
+            2 -> "Berhasil menyelesaikan 3 milestone"
+            3 -> "Berhasil menyelesaikan 5 milestone"
+            else -> "Semua milestone selesai!"
+        }
+    }
+
+    // Fungsi untuk menentukan jumlah milestone yang dibutuhkan
+    private fun requiredMilestones(level: Int): Int {
+        return when (level) {
+            2 -> 3
+            3 -> 5
+            else -> Int.MAX_VALUE
+        }
+    }
+
+    // Fungsi untuk menentukan EXP baru berdasarkan level
+    private fun newExpForLevel(level: Int): Int {
+        return when (level) {
+            2 -> 600
+            3 -> 800
+            else -> 1000
+        }
+    }
+    private fun onGoalCompleted(goalId: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        updateMilestoneAchievement(userId)
+    }
+
+
 }

@@ -56,6 +56,7 @@ class HomePageActivity : AppCompatActivity() {
     private var limitHiburan: Long = 0
     private var limitTabungan: Long = 0
     private var limitSosial: Long = 0
+    private val achievements = mutableListOf<AchievementItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +92,14 @@ class HomePageActivity : AppCompatActivity() {
             refreshData()
         }
 
-        val userId = auth.currentUser?.uid
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            createAchievementsDocumentJikaPerlu(userId)
+        } else {
+            Toast.makeText(this, "User belum login!", Toast.LENGTH_SHORT).show()
+        }
+
+//        val userId = auth.currentUser?.uid
 
         // Tampilkan username di TextView
         val welcomeTextView: TextView = findViewById(R.id.welcomeText)
@@ -263,6 +271,50 @@ class HomePageActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    private fun createAchievementsDocumentJikaPerlu(userId: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        val initialAchievements = listOf(
+            mapOf(
+                "title" to "Total keseluruhan pemasukan mencapai Rp 5.000.000",
+                "currentLevel" to 0,
+                "maxLevel" to 5,
+                "exp" to 100,
+                "targetAmount" to 5000000L,
+                "currentProgress" to 0L
+            )
+//            mapOf(
+//                "title" to "Berhasil menyelesaikan 1 milestone",
+//                "currentLevel" to 0,
+//                "maxLevel" to 3,
+//                "exp" to 600,
+//                "targetAmount" to 1,
+//                "currentProgress" to 0
+//            )
+        )
+
+        val achievementsData = mapOf("achievements" to initialAchievements)
+
+        db.collection("achievements").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    db.collection("achievements").document(userId)
+                        .set(achievementsData)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Dokumen pencapaian dibuat!", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Gagal membuat dokumen: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memeriksa dokumen: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

@@ -48,10 +48,11 @@ class SignUpActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         val userId = auth.currentUser?.uid
                         if (userId != null) {
-                            // Simpan username dan email ke Firestore
+                            // Simpan username, email, dan totalExp ke Firestore
                             val user = mapOf(
                                 "username" to username,
-                                "email" to email
+                                "email" to email,
+                                "totalExp" to 0 // Tambahkan totalExp dengan nilai awal 0
                             )
                             firestore.collection("users").document(userId).set(user)
                                 .addOnCompleteListener { dbTask ->
@@ -69,6 +70,7 @@ class SignUpActivity : AppCompatActivity() {
                         Toast.makeText(this, "Pendaftaran gagal: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
+
         }
 
         val loginLink: TextView = findViewById(R.id.loginLink)

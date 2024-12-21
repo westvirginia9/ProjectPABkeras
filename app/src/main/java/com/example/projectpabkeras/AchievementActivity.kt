@@ -1,33 +1,50 @@
 package com.example.projectpabkeras
 
 import android.content.Intent
-import android.os.Bundle                 // Untuk Bundle (parameter onCreate)
+import android.os.Bundle
+import android.widget.ImageButton
 import android.widget.ImageView
-import android.widget.Toast              // Untuk menampilkan Toast
-import androidx.appcompat.app.AppCompatActivity // Untuk AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager // Untuk LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView // Untuk RecyclerView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class AchievementActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var achievementAdapter: AchievementAdapter
-    private val achievements = mutableListOf<AchievementItem>() // Data pencapaian
-
+    private val achievements = mutableListOf<AchievementItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_achievement)
 
+        recyclerView = findViewById(R.id.recyclerViewAchievements)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        achievementAdapter = AchievementAdapter(achievements)
+        recyclerView.adapter = achievementAdapter
 
-        // Tombol Navigasi
-        val btnBack = findViewById<ImageView>(R.id.btn_back)
-        btnBack.setOnClickListener { onBackPressed() }
+        loadAchievementsFromFirestore()
+
+
+
+
 
         // Tombol Goals
         val goalsButton: ImageView = findViewById(R.id.goals_bottom)
         goalsButton.setOnClickListener {
             val intent = Intent(this, GoalsActivity::class.java)
+            startActivity(intent)
+        }
+
+
+
+        val profileButton: ImageView = findViewById(R.id.ic_profile)
+        profileButton.setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
             startActivity(intent)
         }
 
@@ -38,67 +55,146 @@ class AchievementActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // Tombol Achievement
-        val homeButton: ImageView = findViewById(R.id.ic_home)
-        homeButton.setOnClickListener {
-            val intent = Intent(this, HomePageActivity::class.java)
-            startActivity(intent)
-        }
+
         val icRiwayat: ImageView = findViewById(R.id.ic_history)
         icRiwayat.setOnClickListener {
             val intent = Intent(this, RiwayatActivity::class.java)
             startActivity(intent)
         }
-        val profileButton: ImageView = findViewById(R.id.ic_profile)
-        profileButton.setOnClickListener {
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
-        }
+    }
 
-        // Inisialisasi RecyclerView dan Adapter
-        recyclerView = findViewById(R.id.recyclerViewAchievements)
+    private fun updateAchievementInFirestore(userId: String, updatedAchievements: List<Map<String, Any>>) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("achievements").document(userId)
+            .update("achievements", updatedAchievements)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Pencapaian diperbarui!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memperbarui pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
 
-        achievementAdapter = AchievementAdapter(
-            items = achievements,
-            showDetails = true, // Tampilkan detail level dan EXP
-            onItemClick = { achievement, position -> // Logika klik item
-                if (achievement.currentLevel < achievement.maxLevel) {
-                    achievement.currentLevel++
-                    achievement.exp += 100
-                    achievement.title = getUpdatedAchievementTitle(achievement.currentLevel)
-                    achievementAdapter.notifyItemChanged(position)
-                    Toast.makeText(this, "Level up! ${achievement.title}", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "Pencapaian sudah maksimal!", Toast.LENGTH_SHORT).show()
+
+    private fun loadAchievementsFromFirestore() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("achievements").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val achievementsArray = document.get("achievements") as? List<Map<String, Any>>
+                    val achievements = achievementsArray?.map { achievementData ->
+                        AchievementItem(
+                            title = achievementData["title"] as String,
+                            currentLevel = (achievementData["currentLevel"] as Long).toInt(),
+                            maxLevel = (achievementData["maxLevel"] as Long).toInt(),
+                            exp = (achievementData["exp"] as Long).toInt(),
+                            targetAmount = achievementData["targetAmount"] as Long,
+                            currentProgress = achievementData["currentProgress"] as Long
+                        )
+                    } ?: emptyList()
+
+                    val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewAchievements)
+                    val achievementAdapter = AchievementAdapter(achievements, true)
+                    recyclerView.layoutManager = LinearLayoutManager(this)
+                    recyclerView.adapter = achievementAdapter
                 }
             }
-        )
-
-        recyclerView.adapter = achievementAdapter
-        recyclerView.layoutManager = LinearLayoutManager(this)
-
-        // Muat data awal
-        loadAchievements()
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun loadAchievements() {
-        // Dummy data awal
-        achievements.add(AchievementItem("Konsisten Mencatat Pengeluaran Selama 3 hari berturut-turut", 1, 5, 100))
-        achievements.add(AchievementItem("Berhasil Menyelesaikan 1 kali Milestone", 1, 5, 100))
-        achievements.add(AchievementItem("Berhasil menyisihkan uang sosial >20% pemasukan", 0, 5, 50))
-        achievements.add(AchievementItem("Tidak melebihi batas pengeluaran kategori entertainment", 0, 5, 50))
-        achievements.add(AchievementItem("Total keseluruhan pemasukan mencapai Rp 5.000.000", 0, 5, 1000))
-        achievementAdapter.notifyDataSetChanged()
+    private fun updateUserExp(userId: String, expGained: Int) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Ambil total EXP yang ada saat ini
+                    val currentExp = document.getLong("totalExp")?.toInt() ?: 0
+                    val newExp = currentExp + expGained
+
+                    // Perbarui total EXP di Firestore
+                    db.collection("users").document(userId)
+                        .update("totalExp", newExp)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "EXP diperbarui menjadi $newExp", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Gagal memperbarui EXP: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data pengguna: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun getUpdatedAchievementTitle(level: Int): String {
-        return when (level) {
-            2 -> "Berhasil menyelesaikan 3 milestone"
-            3 -> "Berhasil menyelesaikan 5 milestone"
-            4 -> "Berhasil menyelesaikan 7 milestone"
-            5 -> "Semua milestone selesai!"
-            else -> "Pencapaian lainnya"
+
+
+    private fun updateAchievement(userId: String, achievementType: String, progressToAdd: Long) {
+        val db = FirebaseFirestore.getInstance()
+
+        val achievementIndex = achievements.indexOfFirst { it.title.contains(achievementType, ignoreCase = true) }
+
+        if (achievementIndex != -1) {
+            val achievement = achievements[achievementIndex]
+
+            // Tambahkan progress
+            achievement.currentProgress += progressToAdd
+
+            if (achievement.currentProgress >= achievement.targetAmount) {
+                achievement.currentLevel++
+                achievement.currentProgress -= achievement.targetAmount
+
+                // Update berdasarkan jenis achievement
+                when (achievementType) {
+                    "pemasukan" -> {
+                        achievement.targetAmount += 2000000
+                        achievement.exp += 100
+                        achievement.title = when (achievement.currentLevel) {
+                            2 -> "Total keseluruhan pemasukan mencapai Rp 7.000.000"
+                            3 -> "Total keseluruhan pemasukan mencapai Rp 9.000.000"
+                            else -> "Pencapaian pemasukan luar biasa!"
+                        }
+                    }
+                    "goals" -> {
+                        achievement.targetAmount += 2
+                        achievement.exp += 200
+                        achievement.title = when (achievement.currentLevel) {
+                            2 -> "Berhasil menyelesaikan 3 milestone"
+                            3 -> "Berhasil menyelesaikan 5 milestone"
+                            else -> "Semua milestone selesai!"
+                        }
+                    }
+                }
+            }
+
+            db.collection("achievements").document(userId)
+                .update("achievements", achievements.map { it.toMap() })
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Pencapaian diperbarui!", Toast.LENGTH_SHORT).show()
+                    achievementAdapter.notifyItemChanged(achievementIndex)
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Gagal memperbarui pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
         }
     }
-}
 
+
+    fun updateIncomeAchievement(userId: String, incomeAdded: Long) {
+        updateAchievement(userId, "pemasukan", incomeAdded)
+    }
+
+    private fun updateMilestoneAchievement(userId: String) {
+        updateAchievement(userId, "milestone", 1)
+    }
+
+
+
+}

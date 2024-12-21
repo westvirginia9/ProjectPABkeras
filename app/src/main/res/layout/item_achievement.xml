@@ -42,6 +42,7 @@
             android:text="Level: 1/5"
             android:textSize="14sp"
             android:textColor="@color/black"
+            android:visibility="visible"
             android:layout_marginTop="4dp" />
     </LinearLayout>
 
@@ -53,5 +54,6 @@
         android:text="+100 EXP"
         android:textSize="14sp"
         android:textStyle="bold"
+        android:visibility="visible"
         android:textColor="@color/black" />
 </LinearLayout>

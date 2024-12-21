@@ -1,6 +1,7 @@
 package com.example.projectpabkeras
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +19,41 @@ class InputActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_input)
+
+        // Tombol Navigasi
+        val btnBack = findViewById<ImageView>(R.id.btn_back)
+        btnBack.setOnClickListener { onBackPressed() }
+
+        // Tombol Goals
+        val goalsButton: ImageView = findViewById(R.id.goals_bottom)
+        goalsButton.setOnClickListener {
+            val intent = Intent(this, GoalsActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Tombol Achievement
+        val achievementButton: ImageView = findViewById(R.id.icAchievement)
+        achievementButton.setOnClickListener {
+            val intent = Intent(this, AchievementActivity::class.java)
+            startActivity(intent)
+        }
+
+        // Tombol Achievement
+        val homeButton: ImageView = findViewById(R.id.ic_home)
+        homeButton.setOnClickListener {
+            val intent = Intent(this, HomePageActivity::class.java)
+            startActivity(intent)
+        }
+        val icRiwayat: ImageView = findViewById(R.id.ic_history)
+        icRiwayat.setOnClickListener {
+            val intent = Intent(this, RiwayatActivity::class.java)
+            startActivity(intent)
+        }
+        val profileButton: ImageView = findViewById(R.id.ic_profile)
+        profileButton.setOnClickListener {
+            val intent = Intent(this, ProfileActivity::class.java)
+            startActivity(intent)
+        }
 
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
@@ -114,13 +150,93 @@ class InputActivity : AppCompatActivity() {
                 Toast.makeText(this, "Transaksi berhasil disimpan", Toast.LENGTH_SHORT).show()
                 if (type == "income") {
                     updateCategoryLimits(userId) // Update limit saat pemasukan disimpan
+                    onIncomeAdded(amount!!.toLong())
+                    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnSuccessListener
+                    val incomeAmount = amount?.toLong() ?: 0L
+                    AchievementActivity().updateIncomeAchievement(userId, incomeAmount)
+                    updateIncomeAchievement(userId, amount.toLong())
+
                 }
                 finish()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal menyimpan transaksi: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+//        if (type == "income") {
+//            val userId = auth.currentUser?.uid ?: return
+//
+//        }
     }
+
+    private fun updateIncomeAchievement(userId: String, incomeAdded: Long) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("achievements").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val achievementsArray = document.get("achievements") as? List<Map<String, Any>>
+                    if (achievementsArray != null) {
+                        val updatedAchievements = achievementsArray.map { achievementData ->
+                            if ((achievementData["title"] as String).contains("pemasukan", ignoreCase = true)) {
+                                val currentProgress = (achievementData["currentProgress"] as Long) + incomeAdded
+                                val targetAmount = achievementData["targetAmount"] as Long
+                                val currentLevel = (achievementData["currentLevel"] as Long).toInt()
+                                val maxLevel = (achievementData["maxLevel"] as Long).toInt()
+                                val exp = (achievementData["exp"] as Long).toInt()
+
+                                val newLevel = if (currentProgress >= targetAmount && currentLevel < maxLevel) {
+                                    currentLevel + 1
+                                } else {
+                                    currentLevel
+                                }
+
+                                val newProgress = if (currentProgress >= targetAmount) {
+                                    currentProgress - targetAmount
+                                } else {
+                                    currentProgress
+                                }
+
+                                val newTargetAmount = if (newLevel > currentLevel) {
+                                    targetAmount + 2000000
+                                } else {
+                                    targetAmount
+                                }
+
+                                val newExp = if (newLevel > currentLevel) {
+                                    exp + 100
+                                } else {
+                                    exp
+                                }
+
+                                return@map mapOf(
+                                    "title" to achievementData["title"],
+                                    "currentLevel" to newLevel,
+                                    "maxLevel" to maxLevel,
+                                    "exp" to newExp,
+                                    "targetAmount" to newTargetAmount,
+                                    "currentProgress" to newProgress
+                                )
+                            }
+                            achievementData
+                        }
+
+                        db.collection("achievements").document(userId)
+                            .update("achievements", updatedAchievements)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Pencapaian pemasukan diperbarui!", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Gagal memperbarui pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     private fun updateCategoryLimits(userId: String) {
         firestore.collection("transactions")
@@ -154,4 +270,94 @@ class InputActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal menghitung pemasukan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
+    private fun onIncomeAdded(amount: Long) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("achievements").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val achievementsArray = document.get("achievements") as? List<Map<String, Any>>
+                    if (achievementsArray != null) {
+                        val updatedAchievements = achievementsArray.map { achievementData ->
+                            val currentProgress = (achievementData["currentProgress"] as Long) + amount
+                            val targetAmount = achievementData["targetAmount"] as Long
+                            val currentLevel = (achievementData["currentLevel"] as Long).toInt()
+                            val maxLevel = (achievementData["maxLevel"] as Long).toInt()
+
+                            val newLevel = if (currentProgress >= targetAmount && currentLevel < maxLevel) {
+                                currentLevel + 1
+                            } else {
+                                currentLevel
+                            }
+
+                            // Jika level naik, tambahkan EXP
+                            if (newLevel > currentLevel) {
+                                val expGained = when (newLevel) {
+                                    1 -> 100
+                                    2 -> 200
+                                    3 -> 300
+                                    else -> 0
+                                }
+                                updateUserExp(userId, expGained)
+                            }
+
+                            // Kembalikan data achievement yang diperbarui
+                            mapOf(
+                                "title" to achievementData["title"],
+                                "currentLevel" to newLevel,
+                                "maxLevel" to maxLevel,
+                                "targetAmount" to targetAmount,
+                                "currentProgress" to currentProgress
+                            )
+                        }
+
+                        // Perbarui ke Firestore
+                        db.collection("achievements").document(userId)
+                            .update("achievements", updatedAchievements)
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat pencapaian: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    private fun updateUserExp(userId: String, expGained: Int) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("users").document(userId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Ambil total EXP yang ada saat ini
+                    val currentExp = document.getLong("totalExp")?.toInt() ?: 0
+                    val newExp = currentExp + expGained
+
+                    // Perbarui total EXP di Firestore
+                    db.collection("users").document(userId)
+                        .update("totalExp", newExp)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "EXP diperbarui menjadi $newExp", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Gagal memperbarui EXP: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data pengguna: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+
+
+
+
+
+
 }
