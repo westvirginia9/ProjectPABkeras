@@ -14,7 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 private lateinit var auth: FirebaseAuth
-private lateinit var firestore: FirebaseFirestore
+lateinit var firestore: FirebaseFirestore
 private lateinit var notificationsContainer: LinearLayout
 
     class NotificationActivity : AppCompatActivity() {

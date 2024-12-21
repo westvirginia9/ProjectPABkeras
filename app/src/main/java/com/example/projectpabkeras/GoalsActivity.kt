@@ -252,5 +252,37 @@ class GoalsActivity : AppCompatActivity() {
         updateMilestoneAchievement(userId)
     }
 
+    private fun updateGoalProgress(goalName: String, amount: Long) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        firestore.collection("goals")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("goalName", goalName)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if (!snapshot.isEmpty) {
+                    val goalDocument = snapshot.documents[0]
+                    val goalId = goalDocument.id
+                    val currentAmount = goalDocument.getLong("currentAmount") ?: 0L
+
+                    firestore.collection("goals").document(goalId)
+                        .update("currentAmount", currentAmount + amount)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, "Progress goal diperbarui!", Toast.LENGTH_SHORT).show()
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(this, "Gagal memperbarui goal: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat goal: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+
+
+
 
 }
