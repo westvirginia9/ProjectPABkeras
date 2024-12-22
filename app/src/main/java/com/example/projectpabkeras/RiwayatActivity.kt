@@ -4,12 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.projectpabkeras.adapters.TransactionAdapter
 import com.example.projectpabkeras.adapters.WeeklyAdapter
 import com.example.projectpabkeras.adapters.MonthlyAdapter
+import com.example.projectpabkeras.models.MonthlySummary
 import com.example.projectpabkeras.models.Transaction
 import com.example.projectpabkeras.models.WeeklySummary
 import com.google.firebase.auth.FirebaseAuth
@@ -72,8 +74,9 @@ class RiwayatActivity : AppCompatActivity() {
 
         tabBulanan.setOnClickListener {
             setTabSelected(tabBulanan, tabHarian, tabMingguan)
-            fetchMonthlyTransactions()
+            setupRecyclerViewBulanan()
         }
+
 
         // Update bulan awal
         updateDateDisplay()
@@ -131,6 +134,12 @@ class RiwayatActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { snapshot ->
                 transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+                    .map { transaction ->
+                        transaction.apply {
+                            date = date.takeIf { it.isNotEmpty() }
+                                ?: SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                        }
+                    }
                 setupRecyclerViewHarian()
                 updateSummary()
             }
@@ -138,6 +147,7 @@ class RiwayatActivity : AppCompatActivity() {
                 // Handle error
             }
     }
+
 
     private fun updateSummary() {
         val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
@@ -150,6 +160,9 @@ class RiwayatActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerViewHarian() {
+        val sortedTransactions = transactions.sortedBy { transaction ->
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
+        }
         val adapter = TransactionAdapter(transactions)
         recyclerView.adapter = adapter
     }
@@ -203,9 +216,40 @@ class RiwayatActivity : AppCompatActivity() {
         )
 
         // Tampilkan summary di RecyclerView
-        val adapter = MonthlyAdapter(listOf(summary))
-        recyclerView.adapter = adapter
+//        val adapter = MonthlyAdapter(listOf(summary))
+//        recyclerView.adapter = adapter
     }
+
+    private fun setupRecyclerViewBulanan() {
+        val userId = auth.currentUser?.uid ?: return
+
+        firestore.collection("transactions")
+            .whereEqualTo("userId", userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
+
+                val groupedByMonth = transactions.groupBy {
+                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(it.date)
+                    SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(date ?: Date())
+                }
+
+                val monthlySummaries = groupedByMonth.map { (monthName, transactions) ->
+                    val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
+                    val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+
+                    MonthlySummary(monthName, totalIncome, totalExpense)
+                }.sortedByDescending { it.monthName } // Urutkan dari bulan terbaru
+
+                // Set data ke adapter
+                val adapter = MonthlyAdapter(monthlySummaries)
+                recyclerView.adapter = adapter
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data bulanan: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     private fun groupTransactionsByWeek(transactions: List<Transaction>): List<WeeklySummary> {
         val weeklySummaries = mutableListOf<WeeklySummary>()
