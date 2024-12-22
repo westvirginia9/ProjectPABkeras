@@ -290,35 +290,10 @@
                     android:layout_height="match_parent">
 
                     <!-- TextView untuk menampilkan bulan dan tahun -->
-                    <TextView
-                        android:id="@+id/grafik_date"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentStart="true"
-                        android:layout_alignParentTop="true"
-                        android:layout_marginStart="30dp"
-                        android:text="Nov - 2024"
-                        android:textColor="@color/black"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
 
                     <!-- Tombol kiri untuk memilih bulan sebelumnya -->
-                    <ImageView
-                        android:id="@+id/iv_left"
-                        android:layout_width="18dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginStart="8dp"
-                        android:src="@drawable/ic_left" />
 
                     <!-- Tombol kanan untuk memilih bulan berikutnya -->
-                    <ImageView
-                        android:id="@+id/iv_right"
-                        android:layout_width="18dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentStart="true"
-                        android:layout_marginStart="150dp"
-                        android:src="@drawable/ic_right" />
 
                     <!-- PieChart -->
                     <com.github.mikephil.charting.charts.PieChart

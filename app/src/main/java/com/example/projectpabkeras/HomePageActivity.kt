@@ -75,19 +75,19 @@ class HomePageActivity : AppCompatActivity() {
         tvProgressTabungan = findViewById(R.id.tv_progress_tabungan)
         tvProgressSosial = findViewById(R.id.tv_progress_sosial)
         pieChart = findViewById(R.id.pieChart)
-        ivLeft = findViewById(R.id.iv_left)
-        ivRight = findViewById(R.id.iv_right)
+        if_left = findViewById(R.id.if_left)
+        if_right = findViewById(R.id.if_right)
 
         // Setup awal
         setupPieChart()
         updateDateDisplay()
 
         // Tombol navigasi bulan
-        ivLeft.setOnClickListener {
+        if_left.setOnClickListener {
             moveToPreviousMonth()
             refreshData()
         }
-        ivRight.setOnClickListener {
+        if_right.setOnClickListener {
             moveToNextMonth()
             refreshData()
         }
@@ -320,7 +320,11 @@ class HomePageActivity : AppCompatActivity() {
 
 
     private fun checkLimitExceeded(category: String, totalSpent: Long, limit: Long) {
-        println("Checking limit for $category: totalSpent=$totalSpent, limit=$limit")
+        if (limit == 0L || totalSpent == 0L) {
+            // Jika limit atau total pengeluaran belum valid, abaikan
+            return
+        }
+
         if (totalSpent > limit) {
             val userId = auth.currentUser?.uid ?: return
             val message = "Batas pengeluaran untuk $category telah terlampaui! Total: Rp$totalSpent dari limit Rp$limit"
@@ -343,6 +347,7 @@ class HomePageActivity : AppCompatActivity() {
                 .show()
         }
     }
+
 
     private fun loadCategoryProgress() {
         val userId = auth.currentUser?.uid ?: return

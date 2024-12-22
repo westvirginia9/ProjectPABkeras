@@ -41,7 +41,10 @@ class AchievementActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
+        val homeButton: ImageView = findViewById(R.id.ic_home)
+        homeButton.setOnClickListener {
+            startActivity(Intent(this, HomePageActivity::class.java))
+        }
 
         val profileButton: ImageView = findViewById(R.id.ic_profile)
         profileButton.setOnClickListener {

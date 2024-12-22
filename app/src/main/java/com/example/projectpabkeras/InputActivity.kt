@@ -111,10 +111,14 @@ class InputActivity : AppCompatActivity() {
     private fun saveTransaction(type: String) {
         val userId = auth.currentUser?.uid ?: return
 
+        if (type == "income") {
+            updateCategoryLimits(userId) // Perbarui limit kategori berdasarkan total pemasukan terbaru
+        }
+
         val category = if (type == "expense") {
             findViewById<Spinner>(R.id.spinner_kategori).selectedItem.toString()
         } else {
-            "Income" // Default kategori untuk pemasukan
+            "Income"  // Default kategori untuk pemasukan
         }
 
         val amount = if (type == "expense") {
