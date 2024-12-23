@@ -69,10 +69,14 @@ class InputActivity : AppCompatActivity() {
 
         // Ganti tampilan berdasarkan tombol yang dipilih
         btnPengeluaran.setOnClickListener {
+            btnPengeluaran.setBackgroundColor(getColor(R.color.selected_tab))
+            btnPemasukan.setBackgroundColor(getColor(R.color.unselected_tab))
             layoutPengeluaran.visibility = LinearLayout.VISIBLE
             layoutPemasukan.visibility = LinearLayout.GONE
         }
         btnPemasukan.setOnClickListener {
+            btnPengeluaran.setBackgroundColor(getColor(R.color.unselected_tab))
+            btnPemasukan.setBackgroundColor(getColor(R.color.selected_tab))
             layoutPengeluaran.visibility = LinearLayout.GONE
             layoutPemasukan.visibility = LinearLayout.VISIBLE
         }
@@ -144,10 +148,7 @@ class InputActivity : AppCompatActivity() {
             return // Tidak lanjutkan menyimpan transaksi langsung
         }
 
-
-
-
-
+        saveTransactionToFirestore(userId, category, amount!!.toLong(), description)
 
         if (amount == null || date.isEmpty()) {
             Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
@@ -397,33 +398,26 @@ class InputActivity : AppCompatActivity() {
             goalSpinner.adapter = adapter
 
             AlertDialog.Builder(this)
-                .setTitle("Apakah Anda Ingin Menabung untuk Goal?")
+                .setTitle("Pilih Goal untuk Tabungan")
                 .setView(dialogView)
-                .setPositiveButton("Ya") { _, _ ->
+                .setPositiveButton("Tabungan Goals") { _, _ ->
                     val selectedGoal = goalSpinner.selectedItem as? String
                     if (selectedGoal != null) {
-                        // Update progress goal
                         updateGoalProgress(selectedGoal, amount)
-
-                        // Tambahkan ke tabungan umum
-                        updateCategoryLimits(userId, additionalTabungan = amount)
-
-                        // Simpan transaksi ke Firestore
-                        saveTransactionToFirestore(userId, "Tabungan", amount, selectedGoal)
                     } else {
                         Toast.makeText(this, "Pilih goal terlebih dahulu!", Toast.LENGTH_SHORT).show()
                     }
                 }
-                .setNegativeButton("Tidak") { _, _ ->
-                    // Tambahkan ke tabungan umum
-                    updateCategoryLimits(userId, additionalTabungan = amount)
-
-                    // Simpan transaksi ke Firestore
-                    saveTransactionToFirestore(userId, "Tabungan", amount, null)
+                .setNegativeButton("Tabungan Umum") { _, _ ->
+                    // Jika batal, simpan sebagai tabungan umum
+                    saveTransactionToFirestore(userId, "Tabungan", amount, "Tabungan Umum")
                 }
                 .show()
         }
     }
+
+
+
 
 
 
@@ -443,11 +437,12 @@ class InputActivity : AppCompatActivity() {
                     val goalId = goalDocument.id
                     val currentAmount = goalDocument.getLong("currentAmount") ?: 0L
 
-                    // Update progress goal
                     firestore.collection("goals").document(goalId)
                         .update("currentAmount", currentAmount + amount)
                         .addOnSuccessListener {
                             Toast.makeText(this, "Progress goal diperbarui!", Toast.LENGTH_SHORT).show()
+                            // Tambahkan juga transaksi ke Firestore
+                            saveTransactionToFirestore(userId, "Tabungan", amount, goalName)
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(this, "Gagal memperbarui goal: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -461,11 +456,15 @@ class InputActivity : AppCompatActivity() {
 
 
 
+
+
+
     private fun fetchActiveGoals(onGoalsFetched: (List<String>) -> Unit) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         firestore.collection("goals")
             .whereEqualTo("userId", userId)
+            .whereEqualTo("isCompleted", false) // Hanya goal yang belum selesai
             .get()
             .addOnSuccessListener { snapshot ->
                 val goalNames = snapshot.documents.mapNotNull { it.getString("goalName") }
@@ -473,11 +472,14 @@ class InputActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat goal: ${e.message}", Toast.LENGTH_SHORT).show()
-                onGoalsFetched(emptyList()) // Jika gagal, kirim daftar kosong
+                onGoalsFetched(emptyList())
             }
     }
 
-    private fun saveTransactionToFirestore(userId: String, category: String, amount: Long, goalName: String?) {
+
+
+
+    private fun saveTransactionToFirestore(userId: String, category: String, amount: Long, goalName: String? = null) {
         val transaction = mapOf(
             "userId" to userId,
             "type" to "expense",

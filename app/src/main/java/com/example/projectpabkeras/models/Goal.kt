@@ -7,5 +7,6 @@ data class Goal(
     val goalTargetAmount: Int = 0,
     val currentAmount: Int = 0,
     val goalPeriod: String = "",
-    val userId: String = ""
+    val userId: String = "",
+    val isCompleted: Boolean = false
 )

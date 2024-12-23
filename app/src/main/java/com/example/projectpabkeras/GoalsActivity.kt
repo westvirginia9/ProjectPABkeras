@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -18,6 +19,8 @@ class GoalsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_goals)
+
+        migrateGoalsCollection()
 
         goalContainer = findViewById(R.id.goalContainer)
 
@@ -64,8 +67,10 @@ class GoalsActivity : AppCompatActivity() {
                     val goalTargetAmount = document.getLong("goalTargetAmount")?.toInt() ?: 0
                     val currentAmount = document.getLong("currentAmount")?.toInt() ?: 0
                     val goalId = document.id
+                    val isCompleted = document.getBoolean("isCompleted") ?: false
 
-                    addGoalCard(goalName, goalPeriod, goalDescription, goalTargetAmount, currentAmount, goalId)
+                    // Panggil addGoalCard dengan semua parameter termasuk isCompleted
+                    addGoalCard(goalName, goalPeriod, goalDescription, goalTargetAmount, currentAmount, goalId, isCompleted)
                 }
             }
             .addOnFailureListener {
@@ -73,13 +78,15 @@ class GoalsActivity : AppCompatActivity() {
             }
     }
 
+
     private fun addGoalCard(
         title: String,
         period: String,
         description: String,
         targetAmount: Int,
         currentAmount: Int,
-        goalId: String
+        goalId: String,
+        isCompleted: Boolean
     ) {
         val progress = (currentAmount.toFloat() / targetAmount * 100).toInt()
 
@@ -96,12 +103,20 @@ class GoalsActivity : AppCompatActivity() {
         progressBar.max = 100
         progressBar.progress = progress
 
-        btnUpdate.setOnClickListener {
-            showUpdateDialog(goalId, currentAmount, targetAmount)
+        if (isCompleted) {
+            btnUpdate.visibility = View.GONE
+            tvTitle.text = "$title (Selesai)"
+        } else {
+            btnUpdate.setOnClickListener {
+                showUpdateDialog(goalId, currentAmount, targetAmount)
+            }
         }
 
         goalContainer.addView(cardLayout)
     }
+
+
+
 
     private fun showUpdateDialog(goalId: String, currentAmount: Int, targetAmount: Int) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_update_goal, null)
@@ -115,7 +130,7 @@ class GoalsActivity : AppCompatActivity() {
                 if (inputAmount != null && inputAmount > 0) {
                     val newAmount = currentAmount + inputAmount
                     if (newAmount <= targetAmount) {
-                        updateGoalAmount(goalId, newAmount)
+                        updateGoalAmount(goalId, newAmount, targetAmount)
                     } else {
                         Toast.makeText(this, "Jumlah melebihi target!", Toast.LENGTH_SHORT).show()
                     }
@@ -127,7 +142,9 @@ class GoalsActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun updateGoalAmount(goalId: String, newAmount: Int) {
+
+
+    private fun updateGoalAmount(goalId: String, newAmount: Int, targetAmount: Int) {
         db.collection("goals").document(goalId)
             .update("currentAmount", newAmount)
             .addOnSuccessListener {
@@ -140,6 +157,35 @@ class GoalsActivity : AppCompatActivity() {
             }
     }
 
+
+    private fun fetchActiveGoals(onGoalsFetched: (List<Goal>) -> Unit) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        db.collection("goals")
+            .whereEqualTo("userId", userId)
+            .whereEqualTo("isCompleted", false) // Filter hanya goal yang belum selesai
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val goals = snapshot.documents.mapNotNull { it.toObject(Goal::class.java) }
+                onGoalsFetched(goals)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat goal: ${e.message}", Toast.LENGTH_SHORT).show()
+                onGoalsFetched(emptyList()) // Jika gagal, kirim daftar kosong
+            }
+    }
+
+    private fun showGoalCompletedDialog(title: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Goal Selesai!")
+            .setMessage("Selamat! Goal \"$title\" telah selesai.")
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+
+
+
     private fun checkGoalCompletion(goalId: String, currentAmount: Int) {
         db.collection("goals").document(goalId)
             .get()
@@ -147,11 +193,55 @@ class GoalsActivity : AppCompatActivity() {
                 val targetAmount = document.getLong("goalTargetAmount")?.toInt() ?: return@addOnSuccessListener
                 if (currentAmount >= targetAmount) {
                     showGoalCompletedDialog()
-//                    updateMilestoneAchievement()
-                    onGoalCompleted()
+                    markGoalAsCompleted(goalId) // Tandai goal sebagai selesai
                 }
             }
+            .addOnFailureListener {
+                Toast.makeText(this, "Gagal memuat data goal", Toast.LENGTH_SHORT).show()
+            }
     }
+
+    private fun migrateGoalsCollection() {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("goals").get()
+            .addOnSuccessListener { snapshot ->
+                for (document in snapshot.documents) {
+                    val currentAmount = document.getLong("currentAmount") ?: 0L
+                    val goalTargetAmount = document.getLong("goalTargetAmount") ?: 0L
+
+                    // Tentukan status "isCompleted"
+                    val isCompleted = currentAmount >= goalTargetAmount
+
+                    // Perbarui dokumen
+                    db.collection("goals").document(document.id)
+                        .update("isCompleted", isCompleted)
+                        .addOnSuccessListener {
+                            println("Dokumen ${document.id} berhasil dimigrasi!")
+                        }
+                        .addOnFailureListener { e ->
+                            println("Gagal memperbarui dokumen ${document.id}: ${e.message}")
+                        }
+                }
+            }
+            .addOnFailureListener { e ->
+                println("Gagal mengambil koleksi goals: ${e.message}")
+            }
+    }
+
+
+    private fun markGoalAsCompleted(goalId: String) {
+        db.collection("goals").document(goalId)
+            .update("isCompleted", true)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Goal berhasil ditandai sebagai selesai!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menandai goal sebagai selesai: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
 
     private fun onGoalCompleted() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
