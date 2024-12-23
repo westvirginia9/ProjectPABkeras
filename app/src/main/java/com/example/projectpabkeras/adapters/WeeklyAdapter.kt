@@ -12,22 +12,23 @@ class WeeklyAdapter(private val weeklySummaries: List<WeeklySummary>) :
     RecyclerView.Adapter<WeeklyAdapter.WeeklyViewHolder>() {
 
     class WeeklyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvTanggal: TextView = itemView.findViewById(R.id.tvTanggal)
-        val tvPengeluaranHarian: TextView = itemView.findViewById(R.id.tvPengeluaranHarian)
+        val tvTanggalRentang: TextView = itemView.findViewById(R.id.tvTanggalRentang)
+        val tvTotalPengeluaran: TextView = itemView.findViewById(R.id.tvPengeluaranMingguan)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WeeklyViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_riwayat_harian, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_riwayat_mingguan, parent, false)
         return WeeklyViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: WeeklyViewHolder, position: Int) {
         val summary = weeklySummaries[position]
+        holder.tvTanggalRentang.text = summary.weekRange
+        holder.tvTotalPengeluaran.text = "Rp ${summary.totalExpense}"
 
-        holder.tvTanggal.text = summary.weekRange
-        holder.tvPengeluaranHarian.text = "- Rp ${summary.totalExpense.toInt()}"
     }
 
     override fun getItemCount(): Int = weeklySummaries.size
 }
+

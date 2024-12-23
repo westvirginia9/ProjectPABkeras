@@ -32,6 +32,8 @@ class RiwayatActivity : AppCompatActivity() {
     private lateinit var tvSisaUang: TextView
     private lateinit var tvDate: TextView
     private val currentCalendar = Calendar.getInstance()
+    private var activeTab: String = "Harian" // Default tab saat aplikasi dibuka
+
 
     private var transactions: List<Transaction> = emptyList()
 
@@ -63,16 +65,19 @@ class RiwayatActivity : AppCompatActivity() {
 
         // Tab navigation
         tabHarian.setOnClickListener {
+            activeTab = "Harian"
             setTabSelected(tabHarian, tabMingguan, tabBulanan)
             setupRecyclerViewHarian()
         }
 
         tabMingguan.setOnClickListener {
+            activeTab = "Mingguan"
             setTabSelected(tabMingguan, tabHarian, tabBulanan)
             setupRecyclerViewMingguan()
         }
 
         tabBulanan.setOnClickListener {
+            activeTab = "Bulanan"
             setTabSelected(tabBulanan, tabHarian, tabMingguan)
             setupRecyclerViewBulanan()
         }
@@ -112,14 +117,25 @@ class RiwayatActivity : AppCompatActivity() {
             currentCalendar.add(Calendar.MONTH, -1) // Mundur 1 bulan
             updateDateDisplay()
             fetchMonthlyTransactions()
+            refreshActiveTab()
         }
 
         ivRight.setOnClickListener {
             currentCalendar.add(Calendar.MONTH, 1) // Maju 1 bulan
             updateDateDisplay()
             fetchMonthlyTransactions()
+            refreshActiveTab()
         }
     }
+
+    private fun refreshActiveTab() {
+        when (activeTab) {
+            "Harian" -> setupRecyclerViewHarian()
+            "Mingguan" -> setupRecyclerViewMingguan()
+            "Bulanan" -> setupRecyclerViewBulanan()
+        }
+    }
+
 
     private fun updateDateDisplay() {
         val monthFormat = SimpleDateFormat("MMMM yyyy", Locale("id", "ID"))
@@ -160,15 +176,21 @@ class RiwayatActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerViewHarian() {
-        val sortedTransactions = transactions.sortedBy { transaction ->
-            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
-        }
-        val adapter = TransactionAdapter(transactions)
+        val selectedMonthYear = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
+
+        val filteredTransactions = transactions.filter { transaction ->
+            transaction.date.startsWith(selectedMonthYear) // Filter berdasarkan bulan
+        }.sortedBy { transaction ->
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)?.time
+        } // Urutkan berdasarkan tanggal
+
+        val adapter = TransactionAdapter(filteredTransactions)
         recyclerView.adapter = adapter
     }
 
+
     private fun setupRecyclerViewMingguan() {
-        val weeklySummaries = groupTransactionsByWeek(transactions)
+        val weeklySummaries = groupTransactionsByWeekInMonth(transactions)
         val adapter = WeeklyAdapter(weeklySummaries)
         recyclerView.adapter = adapter
     }
@@ -220,8 +242,52 @@ class RiwayatActivity : AppCompatActivity() {
 //        recyclerView.adapter = adapter
     }
 
+    private fun groupTransactionsByWeekInMonth(transactions: List<Transaction>): List<WeeklySummary> {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val currentMonth = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
+        val calendar = Calendar.getInstance()
+
+        val filteredTransactions = transactions.filter {
+            it.date.startsWith(currentMonth) // Hanya transaksi dari bulan yang dipilih
+        }
+
+        val weeklySummaries = mutableListOf<WeeklySummary>()
+
+        filteredTransactions.groupBy {
+            val date = dateFormat.parse(it.date)
+            calendar.time = date ?: Date()
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY) // Mulai dari Senin
+            dateFormat.format(calendar.time)
+        }.forEach { (startOfWeek, weekTransactions) ->
+            val startDate = dateFormat.parse(startOfWeek)
+            calendar.time = startDate ?: Date()
+            calendar.add(Calendar.DAY_OF_WEEK, 6)
+            val endOfWeek = dateFormat.format(calendar.time)
+
+            val totalIncome = weekTransactions.filter { it.type == "income" }
+                .sumOf { it.amount.toDouble() } // Konversi ke Double untuk konsistensi
+            val totalExpense = weekTransactions.filter { it.type == "expense" }
+                .sumOf { it.amount.toDouble() }
+
+            weeklySummaries.add(
+                WeeklySummary(
+                    weekRange = "$startOfWeek - $endOfWeek",
+                    totalIncome = totalIncome,
+                    totalExpense = totalExpense
+                )
+            )
+        }
+
+        return weeklySummaries
+    }
+
+
+
     private fun setupRecyclerViewBulanan() {
         val userId = auth.currentUser?.uid ?: return
+
+        // Format bulan dan tahun yang dipilih
+        val selectedMonthYear = SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(currentCalendar.time)
 
         firestore.collection("transactions")
             .whereEqualTo("userId", userId)
@@ -229,26 +295,33 @@ class RiwayatActivity : AppCompatActivity() {
             .addOnSuccessListener { snapshot ->
                 val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
 
-                val groupedByMonth = transactions.groupBy {
-                    val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(it.date)
-                    SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(date ?: Date())
+                // Filter transaksi berdasarkan bulan dan tahun yang dipilih
+                val filteredTransactions = transactions.filter { transaction ->
+                    val transactionDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(transaction.date)
+                    val transactionMonthYear = SimpleDateFormat("MMMM yyyy", Locale("id", "ID")).format(transactionDate ?: Date())
+                    transactionMonthYear == selectedMonthYear
                 }
 
-                val monthlySummaries = groupedByMonth.map { (monthName, transactions) ->
-                    val totalIncome = transactions.filter { it.type == "income" }.sumOf { it.amount }
-                    val totalExpense = transactions.filter { it.type == "expense" }.sumOf { it.amount }
+                // Hitung total pemasukan dan pengeluaran untuk bulan yang dipilih
+                val totalIncome = filteredTransactions.filter { it.type == "income" }.sumOf { it.amount }
+                val totalExpense = filteredTransactions.filter { it.type == "expense" }.sumOf { it.amount }
 
-                    MonthlySummary(monthName, totalIncome, totalExpense)
-                }.sortedByDescending { it.monthName } // Urutkan dari bulan terbaru
+                // Buat data bulanan
+                val monthlySummary = MonthlySummary(
+                    monthName = selectedMonthYear,
+                    totalIncome = totalIncome,
+                    totalExpense = totalExpense
+                )
 
                 // Set data ke adapter
-                val adapter = MonthlyAdapter(monthlySummaries)
+                val adapter = MonthlyAdapter(listOf(monthlySummary)) // Hanya data bulan yang dipilih
                 recyclerView.adapter = adapter
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat data bulanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
 
     private fun groupTransactionsByWeek(transactions: List<Transaction>): List<WeeklySummary> {

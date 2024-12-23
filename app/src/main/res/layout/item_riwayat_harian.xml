@@ -1,115 +1,131 @@
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="16dp"
-    android:orientation="vertical">
+    android:background="@drawable/bg_card"
+    android:padding="16dp">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
+    <!-- Icon Image -->
+    <ImageView
+        android:id="@+id/ic_date"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_marginStart="-1dp"
+        android:layout_marginTop="9dp"
+        android:src="@drawable/ic_date"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Hari Text -->
+
+    <!-- Tanggal Text -->
+
+    <!-- Kategori Label -->
+
+    <TextView
+        android:id="@+id/tvHari"
+        android:layout_width="66dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_card"
-        android:padding="16dp">
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="-1dp"
+        android:text="Rabu"
+        android:textColor="@color/black"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@+id/textView2"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/ic_date"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="-1dp"
-            android:layout_marginTop="9dp"
-            android:src="@drawable/ic_date" />
+    <TextView
+        android:id="@+id/tvTanggal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="10dp"
+        android:text="31-10-2024"
+        android:textColor="@color/black"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ic_date"
+        app:layout_constraintTop_toBottomOf="@id/tvHari"
+        app:layout_constraintVertical_bias="1.0" />
 
-        <TextView
-            android:id="@+id/tvHari"
-            android:layout_width="66dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="25dp"
-            android:layout_marginTop="-1dp"
-            android:layout_marginEnd="182dp"
-            android:layout_toStartOf="@+id/tvPengeluaranHarian"
-            android:text="Rabu"
-            android:textColor="@color/black"
-            android:textSize="18dp" />
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="-1dp"
+        android:text="Kategori"
+        android:textColor="@color/black"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@id/tvKategori"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvTanggal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="25dp"
-            android:layout_marginTop="25dp"
-            android:layout_marginEnd="197dp"
-            android:layout_toStartOf="@+id/tvPengeluaranHarian"
-            android:text="31-10-2024"
-            android:textColor="@color/black"
-            android:textSize="10dp" />
+    <!-- Kategori Text -->
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="1dp"
-            android:layout_marginTop="-1dp"
-            android:layout_marginEnd="115dp"
-            android:layout_toStartOf="@+id/tvPengeluaranHarian"
-            android:text="Kategori"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:textSize="13dp" />
+    <!-- Keterangan Label -->
 
-        <TextView
-            android:id="@+id/tvKategori"
-            android:layout_width="58dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="1dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="110dp"
-            android:layout_toStartOf="@+id/tvPengeluaranHarian"
-            android:text="Kebutuhan\nDasar"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="10dp" />
+    <TextView
+        android:id="@+id/tvKategori"
+        android:layout_width="58dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="15dp"
+        android:text="Kebutuhan\nDasar"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/tvTanggal"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="1dp"
-            android:layout_marginTop="-1dp"
-            android:layout_marginEnd="20dp"
-            android:layout_toStartOf="@+id/tvPengeluaranHarian"
-            android:text="Keterangan"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:textSize="13dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-1dp"
+        android:text="Keterangan"
+        android:textColor="@color/black"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/tvPengeluaranHarian"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvKeterangan"
-            android:layout_width="58dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginStart="1dp"
-            android:layout_marginTop="20dp"
-            android:layout_marginEnd="25dp"
-            android:layout_toStartOf="@+id/tvPengeluaranHarian"
-            android:text="Nasi Padang"
-            android:textAlignment="center"
-            android:textColor="@color/black"
-            android:textSize="10dp" />
+    <!-- Keterangan Text -->
 
-        <TextView
-            android:id="@+id/tvPengeluaranHarian"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="1dp"
-            android:text="- Rp 20.000"
-            android:textColor="@color/black" />
-    </RelativeLayout>
+    <!-- Pengeluaran Text -->
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/tvKeterangan"
+        android:layout_width="58dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="1dp"
+        android:text="Nasi Padang"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="10sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvPengeluaranHarian"
+        app:layout_constraintHorizontal_bias="0.333"
+        app:layout_constraintStart_toEndOf="@id/tvKategori"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.727" />
+
+    <TextView
+        android:id="@+id/tvPengeluaranHarian"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="1dp"
+        android:text="- Rp 20.000"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

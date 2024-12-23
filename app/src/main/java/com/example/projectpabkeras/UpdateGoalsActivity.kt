@@ -25,7 +25,6 @@ class UpdateGoalsActivity : AppCompatActivity() {
         val dateEditText = findViewById<EditText>(R.id.et_update_date)
         val saveButton = findViewById<Button>(R.id.btn_update_goal)
         val btnBack = findViewById<ImageView>(R.id.btn_back)
-
         // Back Button Logic
         btnBack.setOnClickListener { onBackPressed() }
 
