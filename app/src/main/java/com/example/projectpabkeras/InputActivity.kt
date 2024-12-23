@@ -149,7 +149,33 @@ class InputActivity : AppCompatActivity() {
             return // Tidak lanjutkan menyimpan transaksi langsung
         }
 
+        val transaction = mapOf(
+            "userId" to userId,
+            "type" to type,
+            "category" to category,
+            "amount" to amount,
+            "description" to description,
+            "date" to date
+        )
+
+        firestore.collection("transactions").add(transaction)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Transaksi berhasil disimpan", Toast.LENGTH_SHORT).show()
+
+                if (type == "income") {
+                    updateCategoryLimits(userId)
+                    updateIncomeAchievement(userId, amount.toLong()) // Pastikan fungsi ini dipanggil
+                }
+
+                finish()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menyimpan transaksi: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+
         saveTransactionToFirestore(userId, category, amount.toLong(), description, date, type)
+
+
     }
 
     private fun updateIncomeAchievement(userId: String, incomeAdded: Long) {
@@ -379,14 +405,6 @@ class InputActivity : AppCompatActivity() {
                 .show()
         }
     }
-
-
-
-
-
-
-
-
 
     private fun updateGoalProgress(goalName: String, amount: Long) {
         val userId = auth.currentUser?.uid ?: return
