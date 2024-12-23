@@ -159,7 +159,7 @@ class AchievementActivity : AppCompatActivity() {
                 when (achievementType) {
                     "pemasukan" -> {
                         achievement.targetAmount += 2000000
-                        achievement.exp += 100
+                        achievement.exp += 1000
                         achievement.title = when (achievement.currentLevel) {
                             2 -> "Total keseluruhan pemasukan mencapai Rp 7.000.000"
                             3 -> "Total keseluruhan pemasukan mencapai Rp 9.000.000"

@@ -115,10 +115,6 @@ class InputActivity : AppCompatActivity() {
     private fun saveTransaction(type: String) {
         val userId = auth.currentUser?.uid ?: return
 
-        if (type == "income") {
-            updateCategoryLimits(userId) // Perbarui limit kategori berdasarkan total pemasukan terbaru
-        }
-
         val category = if (type == "expense") {
             findViewById<Spinner>(R.id.spinner_kategori).selectedItem.toString()
         } else {
@@ -143,48 +139,17 @@ class InputActivity : AppCompatActivity() {
             findViewById<EditText>(R.id.et_keterangan_pemasukan).text.toString()
         }
 
-        if (category == "Tabungan" && type == "expense") {
-            showTabunganDialog(amount!!.toLong())
-            return // Tidak lanjutkan menyimpan transaksi langsung
-        }
-
-        saveTransactionToFirestore(userId, category, amount!!.toLong(), description)
-
-        if (amount == null || date.isEmpty()) {
-            Toast.makeText(this, "Harap isi semua field", Toast.LENGTH_SHORT).show()
+        if (date.isEmpty() || amount == null || amount <= 0) {
+            Toast.makeText(this, "Harap isi semua field dengan benar", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val transaction = mapOf(
-            "userId" to userId,
-            "type" to type,
-            "category" to category,
-            "amount" to amount,
-            "description" to description,
-            "date" to date
-        )
+        if (category == "Tabungan" && type == "expense") {
+            showTabunganDialog(amount.toLong())
+            return // Tidak lanjutkan menyimpan transaksi langsung
+        }
 
-        firestore.collection("transactions").add(transaction)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Transaksi berhasil disimpan", Toast.LENGTH_SHORT).show()
-                if (type == "income") {
-                    updateCategoryLimits(userId) // Update limit saat pemasukan disimpan
-                    onIncomeAdded(amount!!.toLong())
-                    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@addOnSuccessListener
-                    val incomeAmount = amount?.toLong() ?: 0L
-                    AchievementActivity().updateIncomeAchievement(userId, incomeAmount)
-                    updateIncomeAchievement(userId, amount.toLong())
-
-                }
-                finish()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menyimpan transaksi: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-//        if (type == "income") {
-//            val userId = auth.currentUser?.uid ?: return
-//
-//        }
+        saveTransactionToFirestore(userId, category, amount.toLong(), description, date, type)
     }
 
     private fun updateIncomeAchievement(userId: String, incomeAdded: Long) {
@@ -389,7 +354,7 @@ class InputActivity : AppCompatActivity() {
     }
 
     private fun showTabunganDialog(amount: Long) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_tabungan, null)
         val goalSpinner = dialogView.findViewById<Spinner>(R.id.spinnerGoals)
 
@@ -409,8 +374,7 @@ class InputActivity : AppCompatActivity() {
                     }
                 }
                 .setNegativeButton("Tabungan Umum") { _, _ ->
-                    // Jika batal, simpan sebagai tabungan umum
-                    saveTransactionToFirestore(userId, "Tabungan", amount, "Tabungan Umum")
+                    saveTransactionToFirestore(userId, "Tabungan", amount, "Tabungan Umum", getCurrentDate(), "expense")
                 }
                 .show()
         }
@@ -425,7 +389,7 @@ class InputActivity : AppCompatActivity() {
 
 
     private fun updateGoalProgress(goalName: String, amount: Long) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
 
         firestore.collection("goals")
             .whereEqualTo("userId", userId)
@@ -441,8 +405,7 @@ class InputActivity : AppCompatActivity() {
                         .update("currentAmount", currentAmount + amount)
                         .addOnSuccessListener {
                             Toast.makeText(this, "Progress goal diperbarui!", Toast.LENGTH_SHORT).show()
-                            // Tambahkan juga transaksi ke Firestore
-                            saveTransactionToFirestore(userId, "Tabungan", amount, goalName)
+                            saveTransactionToFirestore(userId, "Tabungan", amount, goalName, getCurrentDate(), "expense")
                         }
                         .addOnFailureListener { e ->
                             Toast.makeText(this, "Gagal memperbarui goal: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -453,14 +416,8 @@ class InputActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal memuat goal: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
-
-
-
-
-
     private fun fetchActiveGoals(onGoalsFetched: (List<String>) -> Unit) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val userId = auth.currentUser?.uid ?: return
 
         firestore.collection("goals")
             .whereEqualTo("userId", userId)
@@ -475,34 +432,33 @@ class InputActivity : AppCompatActivity() {
                 onGoalsFetched(emptyList())
             }
     }
-
-
-
-
-    private fun saveTransactionToFirestore(userId: String, category: String, amount: Long, goalName: String? = null) {
+    private fun saveTransactionToFirestore(
+        userId: String,
+        category: String,
+        amount: Long,
+        description: String,
+        date: String,
+        type: String
+    ) {
         val transaction = mapOf(
             "userId" to userId,
-            "type" to "expense",
+            "type" to type,
             "category" to category,
             "amount" to amount,
-            "description" to if (goalName != null) "Tabungan untuk $goalName" else "Tabungan Umum",
-            "date" to SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            "description" to description,
+            "date" to date
         )
 
         firestore.collection("transactions").add(transaction)
             .addOnSuccessListener {
-                Toast.makeText(this, "Transaksi tabungan berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Transaksi $category berhasil disimpan", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal menyimpan transaksi: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
-
-
-
-
-
-
-
+    private fun getCurrentDate(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return sdf.format(calendar.time)
+    }
 }

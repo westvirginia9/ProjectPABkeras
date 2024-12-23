@@ -82,6 +82,8 @@ class HomePageActivity : AppCompatActivity() {
         setupPieChart()
         updateDateDisplay()
 
+
+
         // Tombol navigasi bulan
         if_left.setOnClickListener {
             moveToPreviousMonth()
@@ -259,12 +261,14 @@ class HomePageActivity : AppCompatActivity() {
             .whereEqualTo("userId", userId)
             .get()
             .addOnSuccessListener { snapshot ->
+                // Ambil data transaksi dari Firestore
                 val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
-                val filteredTransactions = transactions.filter { it.date.startsWith(currentMonthYear) }
 
+                val filteredTransactions = transactions.filter {
+                    it.date.startsWith(currentMonthYear) && it.type in listOf("income", "expense")
+                }
                 val totalIncome = filteredTransactions.filter { it.type == "income" }.sumOf { it.amount }
                 val totalExpense = filteredTransactions.filter { it.type == "expense" }.sumOf { it.amount }
-
                 tvPemasukanNominal.text = "Rp ${totalIncome}"
                 tvPengeluaranNominal.text = "Rp ${totalExpense}"
                 tvSisaUangNominal.text = "Rp ${totalIncome - totalExpense}"
@@ -273,6 +277,7 @@ class HomePageActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal memuat data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
 
     private fun createAchievementsDocumentJikaPerlu(userId: String) {
@@ -404,6 +409,7 @@ class HomePageActivity : AppCompatActivity() {
 
     private fun loadPieChartData() {
         val userId = auth.currentUser?.uid ?: return
+        val currentMonthYear = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
 
         firestore.collection("transactions")
             .whereEqualTo("userId", userId)
@@ -411,16 +417,20 @@ class HomePageActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { snapshot ->
                 val transactions = snapshot.documents.mapNotNull { it.toObject(Transaction::class.java) }
-                    .filter {
-                        it.date.startsWith(
-                            SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(currentCalendar.time)
-                        )
-                    }
+                val filteredTransactions = transactions.filter {
+                    it.date.startsWith(currentMonthYear)
+                }
 
-                val categoryTotals = transactions.groupBy { it.category }
+                val categoryTotals = filteredTransactions.groupBy { it.category }
                     .mapValues { it.value.sumOf { transaction -> transaction.amount } }
 
                 val entries = categoryTotals.map { PieEntry(it.value.toFloat(), it.key) }
+
+                if (entries.isEmpty()) {
+                    pieChart.data = null
+                    pieChart.invalidate()
+                    return@addOnSuccessListener
+                }
 
                 val dataSet = PieDataSet(entries, "Pengeluaran").apply {
                     colors = ColorTemplate.MATERIAL_COLORS.toList()
@@ -441,6 +451,7 @@ class HomePageActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal memuat data PieChart: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun moveToPreviousMonth() {
         currentCalendar.add(Calendar.MONTH, -1)

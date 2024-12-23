@@ -46,7 +46,7 @@
             android:name=".AddGoalsActivity"
             android:exported="false" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".HomePageActivity"
             android:exported="false" />
         <activity
             android:name=".InputActivity"
@@ -58,7 +58,7 @@
             android:name=".SignUpActivity"
             android:exported="false" />
         <activity
-            android:name=".HomePageActivity"
+            android:name=".LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
